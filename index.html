@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#2d6a4f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Cultivo</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--g:#2d6a4f;--gm:#52b788;--gp:#d8f3dc;--bg:#f4f4ef;--sf:#fff;--tx:#1a1a1a;--mu:#888;--bd:#e5e5e0;--dn:#c0392b;--r:12px;--sh:0 2px 12px rgba(0,0,0,.07)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100dvh;overflow-x:hidden}
+.topbar{background:var(--g);color:#fff;padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.tl{display:flex;align-items:center;gap:10px}
+#back-btn{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:20px;cursor:pointer;line-height:1;display:none}
+.ttl{font-family:'DM Serif Display',serif;font-size:20px}
+.tsub{font-size:11px;opacity:.7;margin-top:1px}
+.tright{display:flex;gap:8px}
+.tbtn{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:8px;padding:7px 12px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--sf);border-top:1px solid var(--bd);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;cursor:pointer;border:none;background:none;font-family:'DM Sans',sans-serif;color:var(--mu);font-size:10px;font-weight:500;gap:3px;transition:color .15s}
+.ni.active{color:var(--g)}.ni svg{width:22px;height:22px}
+.main{padding:14px 14px calc(70px + env(safe-area-inset-bottom));max-width:600px;margin:0 auto}
+.sc{display:none}.sc.active{display:block}
+.dstrip{background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.dval{font-weight:700;font-size:16px}
+.dinp{border:1.5px solid var(--bd);border-radius:8px;padding:6px 10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--tx);background:var(--bg)}
+.sbar{background:var(--g);color:#fff;border-radius:var(--r);padding:12px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.slbl{font-size:11px;opacity:.75}.sval{font-size:20px;font-weight:700}
+/* CLIENTE CARDS */
+.ccard{background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:10px;overflow:hidden;animation:si .2s ease}
+@keyframes si{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.cav{width:40px;height:40px;border-radius:50%;background:var(--gp);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:var(--g);flex-shrink:0}
+/* Cliente finalizado */
+.ccard.done .cav{background:#eee;color:#aaa}
+.ccard.done .cnom{text-decoration:line-through;color:var(--mu)}
+.ccard.done .ctot{color:var(--mu)}
+.done-badge{font-size:11px;font-weight:600;color:var(--mu);background:#e8e8e8;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle}
+/* DETALLE */
+.dbar{background:var(--gp);border-radius:var(--r);padding:12px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+/* PEDIDO ITEMS */
+.pitm{background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:8px;display:flex;align-items:stretch;overflow:hidden;animation:si .18s ease}
+.ccol{width:52px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-right:1px solid var(--bd);flex-shrink:0;transition:background .2s}
+.ccol.pk{background:#f5f5f5}
+.circ{width:26px;height:26px;border-radius:50%;border:2.5px solid var(--bd);display:flex;align-items:center;justify-content:center;background:#fff;font-size:13px;font-weight:700;color:#fff;transition:all .2s}
+.circ.pk{background:var(--g);border-color:var(--g)}
+.pbody{flex:1;padding:11px 12px;min-width:0}
+.pflor{font-weight:700;font-size:15px}.pdet{font-size:12px;color:var(--mu);margin-top:2px}
+.pflor.pk,.pdet.pk{text-decoration:line-through;color:#bbb}
+.pright{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;padding:10px 12px 10px 6px;flex-shrink:0}
+.ptot{font-weight:700;font-size:15px;color:var(--g)}.ptot.pk{color:#bbb}
+.pbtns{display:flex;gap:6px}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:10px;padding:12px 18px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s,transform .1s}
+.btn:active{transform:scale(.97);opacity:.85}
+.bp{background:var(--g);color:#fff}.bs{background:var(--gp);color:var(--g)}
+.bfu{width:100%}.bsm{padding:8px 14px;font-size:13px;border-radius:8px}.bxs{padding:6px 10px;font-size:12px;border-radius:7px}
+.bic{border:none;background:var(--bg);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px}
+.bic.red{color:var(--dn)}
+.fab{position:fixed;bottom:calc(76px + env(safe-area-inset-bottom));right:18px;width:54px;height:54px;border-radius:50%;background:var(--g);color:#fff;border:none;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(45,106,79,.4);cursor:pointer;z-index:99;transition:transform .2s}
+.fab:active{transform:scale(.9)}
+/* MODALS */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
+.mo.open{display:flex}
+.md{background:var(--sf);border-radius:20px 20px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));width:100%;max-width:600px;max-height:90dvh;overflow-y:auto;animation:su .25s cubic-bezier(.34,1.56,.64,1)}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mh{width:40px;height:4px;background:var(--bd);border-radius:2px;margin:0 auto 16px}
+.mt2{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:16px}
+.fg{margin-bottom:13px}
+.fl{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:block}
+.fc{width:100%;padding:11px 13px;border:1.5px solid var(--bd);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:16px;color:var(--tx);background:var(--sf);appearance:none;transition:border-color .15s}
+.fc:focus{outline:none;border-color:var(--g)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* TABS */
+.tabs{display:flex;background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden}
+.tab{flex:1;padding:11px 8px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.tab.active{color:var(--g);border-bottom-color:var(--g);font-weight:600}
+.card{background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:12px}
+.li{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--bd)}
+.li:last-child{border-bottom:none}
+.lin{font-weight:500;font-size:15px}.lis{font-size:12px;color:var(--mu);margin-top:1px}
+.sb{position:relative;margin-bottom:12px}
+.sb input{width:100%;padding:11px 13px 11px 36px;border:1.5px solid var(--bd);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--sf)}
+.sb input:focus{outline:none;border-color:var(--g)}
+.sic{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:15px;pointer-events:none}
+.toast{position:fixed;top:78px;left:50%;transform:translateX(-50%) translateY(-16px);background:#1a1a1a;color:#fff;padding:9px 20px;border-radius:20px;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.empty{text-align:center;padding:40px 20px;color:var(--mu)}
+.eic{font-size:40px;margin-bottom:10px}
+.pbar{background:var(--gp);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.chip{padding:7px 13px;border-radius:20px;border:1.5px solid var(--bd);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;background:none;transition:all .15s}
+.chip.sel{background:var(--g);color:#fff;border-color:var(--g)}
+.rtbl{width:100%;border-collapse:collapse;font-size:14px}
+.rtbl th{background:#3d3d3d;color:#fff;padding:9px 12px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase}
+.rtbl td{padding:8px 12px;border-bottom:1px solid var(--bd)}
+.rtbl tr:nth-child(even) td{background:#f9f9f9}
+.rtbl .rr{text-align:right;font-weight:700;color:var(--g)}
+.pres{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.ps{background:var(--bg);border-radius:10px;padding:10px 12px;text-align:center}
+.psl{font-size:10px;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.psv{font-size:16px;font-weight:700;margin-top:3px}
+.prow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--bd)}
+.prow:last-child{border-bottom:none}
+.mt10{margin-top:10px}.muted{color:var(--mu);font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tl">
+    <button id="back-btn" onclick="goBack()">&#8249;</button>
+    <div><div class="ttl" id="ttl">&#127816; Cultivo</div><div class="tsub" id="tsub"></div></div>
+  </div>
+  <div class="tright">
+    <button class="tbtn" id="btn-recibo" style="display:none" onclick="showReciboModal()">&#129399; Recibo</button>
+    <button class="tbtn" id="btn-pagos"  style="display:none" onclick="openPagos()">&#128176; Pagos</button>
+    <button class="tbtn" onclick="showScreen('config')">&#9881;&#65039;</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="main">
+  <!-- PEDIDOS -->
+  <div class="sc active" id="sc-pedidos">
+    <div class="dstrip">
+      <div class="dval" id="dlbl"></div>
+      <input type="date" class="dinp" id="dpick" onchange="onDateChange(this.value)">
+    </div>
+    <div class="sbar" id="sbar" style="display:none">
+      <div><div class="slbl">Total del día</div><div class="sval" id="stot"></div></div>
+      <div style="text-align:right"><div class="slbl">Clientes</div><div class="sval" id="scnt"></div></div>
+    </div>
+    <div id="dayact" style="display:none;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn bs bsm" onclick="showScreen('recuento')">&#128203; Recuento</button>
+    </div>
+    <div id="clist"></div>
+    <div class="empty" id="edia" style="display:none"><div class="eic">&#127807;</div><div>No hay pedidos.<br>Tocá + para agregar un cliente.</div></div>
+  </div>
+
+  <!-- DETALLE -->
+  <div class="sc" id="sc-detalle">
+    <div class="dbar">
+      <div>
+        <div style="font-weight:700;font-size:17px;color:var(--g)" id="dnom"></div>
+        <div style="font-size:12px;margin-top:2px;color:var(--g)" id="dsal"></div>
+      </div>
+      <div style="font-weight:700;font-size:17px;color:var(--g)" id="dtot"></div>
+    </div>
+    <div id="dlist"></div>
+    <div class="empty" id="edet" style="display:none"><div class="eic">&#127816;</div><div>Tocá + para agregar flores.</div></div>
+  </div>
+
+  <!-- RECUENTO -->
+  <div class="sc" id="sc-recuento">
+    <div class="card">
+      <div style="padding:12px 14px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:600;font-size:14px" id="rtit">Recuento</span>
+        <button class="btn bp bxs" onclick="exportRecuentoPDF()">&#11015; PDF</button>
+      </div>
+      <table class="rtbl"><thead><tr><th>Flor</th><th>Color</th><th style="text-align:right">Paq</th></tr></thead><tbody id="rbody"></tbody></table>
+    </div>
+    <div class="empty" id="erec" style="display:none"><div class="eic">&#128203;</div><div>Cargá pedidos primero.</div></div>
+  </div>
+
+  <!-- CATALOGO -->
+  <div class="sc" id="sc-catalogo">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('flores')">Flores</button>
+      <button class="tab" onclick="switchTab('clientes')">Clientes</button>
+      <button class="tab" onclick="switchTab('colores')">Colores</button>
+    </div>
+    <div id="tab-flores">
+      <div class="sb"><span class="sic">&#128269;</span><input type="text" placeholder="Buscar flor..." oninput="renderFlores(this.value)"></div>
+      <div class="card"><div id="flist"></div></div>
+      <button class="btn bp bfu mt10" onclick="openAddFlor()">+ Agregar flor</button>
+    </div>
+    <div id="tab-clientes" style="display:none">
+      <div class="card"><div id="klist"></div></div>
+      <button class="btn bp bfu mt10" onclick="openAddCliente()">+ Agregar cliente</button>
+    </div>
+    <div id="tab-colores" style="display:none">
+      <div class="card"><div id="colist"></div></div>
+      <button class="btn bp bfu mt10" onclick="openAddColor()">+ Agregar color</button>
+    </div>
+  </div>
+
+  <!-- CONFIG -->
+  <div class="sc" id="sc-config">
+    <div class="card"><div style="padding:14px;display:flex;flex-direction:column;gap:12px">
+      <div><label class="fl">Nombre del negocio</label><input class="fc" id="cfg-nom" placeholder="Flores Directo de Cultivos"></div>
+      <div><label class="fl">Teléfono</label><input class="fc" id="cfg-tel" type="tel" placeholder="221 555-1234"></div>
+      <div><label class="fl">Dirección</label><input class="fc" id="cfg-dir" placeholder="Calle 123, Ciudad"></div>
+      <div><label class="fl">Próximo N° de presupuesto</label><input class="fc" id="cfg-num" type="number" min="1" placeholder="1"></div>
+      <div><label class="fl">Logo (URL de imagen)</label><input class="fc" id="cfg-logo" placeholder="https://..."><div class="muted mt10">URL pública de imagen.</div></div>
+    </div></div>
+    <button class="btn bp bfu" onclick="saveConfig()">&#128190; Guardar</button>
+  </div>
+</div>
+
+<button class="fab" id="fab" onclick="onFab()">+</button>
+
+<nav class="bnav">
+  <button class="ni active" id="nav-pedidos" onclick="showScreen('pedidos')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Pedidos
+  </button>
+  <button class="ni" id="nav-recuento" onclick="showScreen('recuento')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>Recuento
+  </button>
+  <button class="ni" id="nav-catalogo" onclick="showScreen('catalogo')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>Catálogo
+  </button>
+</nav>
+
+<!-- MODAL: nuevo cliente -->
+<div class="mo" id="m-nc"><div class="md">
+  <div class="mh"></div><div class="mt2">Para qué cliente?</div>
+  <div class="fg"><label class="fl">Nombre</label><input list="dl-cli" class="fc" id="nc-nom" placeholder="Elegí o escribí"><datalist id="dl-cli"></datalist></div>
+  <div style="display:flex;gap:10px">
+    <button class="btn bs" style="flex:1" onclick="closeModal('m-nc')">Cancelar</button>
+    <button class="btn bp" style="flex:2" onclick="crearClienteDia()">Continuar</button>
+  </div>
+</div></div>
+
+<!-- MODAL: pedido -->
+<div class="mo" id="m-ped"><div class="md">
+  <div class="mh"></div><div class="mt2" id="ped-title">Nueva flor</div>
+  <input type="hidden" id="ped-id">
+  <div class="fg"><label class="fl">Tipo de flor</label><select class="fc" id="ped-flor" onchange="onFlorCh()"><option value="">Seleccioná</option></select></div>
+  <div class="fg"><label class="fl">Color</label><input list="dl-col" class="fc" id="ped-color" placeholder="Elegí o escribí"><datalist id="dl-col"></datalist></div>
+  <div class="frow">
+    <div class="fg" style="margin:0"><label class="fl">Cantidad (paq)</label><input type="number" class="fc" id="ped-cant" min="1" placeholder="0" oninput="calcPrev()"></div>
+    <div class="fg" style="margin:0"><label class="fl">Precio / paq</label><input type="number" class="fc" id="ped-prec" min="0" placeholder="0" oninput="calcPrev()"></div>
+  </div>
+  <div class="pbar"><span style="font-weight:600;color:var(--g)">Total</span><span style="font-weight:700;font-size:18px;color:var(--g)" id="ped-prev">$ 0</span></div>
+  <div style="display:flex;gap:10px">
+    <button class="btn bs" style="flex:1" onclick="closeModal('m-ped')">Cancelar</button>
+    <button class="btn bp" style="flex:2" onclick="savePedido()">Guardar</button>
+  </div>
+</div></div>
+
+<!-- MODAL: recibo -->
+<div class="mo" id="m-recibo"><div class="md">
+  <div class="mh"></div><div class="mt2">Generar recibo</div>
+  <div class="fg"><label class="fl">Cliente</label>
+    <div id="rchips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
+    <input list="dl-cli-r" class="fc" id="r-cli" placeholder="O escribí el nombre"><datalist id="dl-cli-r"></datalist>
+  </div>
+  <div style="display:flex;gap:10px">
+    <button class="btn bs" style="flex:1" onclick="closeModal('m-recibo')">Cancelar</button>
+    <button class="btn bp" style="flex:2" onclick="genPDF()">Generar PDF</button>
+  </div>
+</div></div>
+
+<!-- MODAL: pagos -->
+<div class="mo" id="m-pagos"><div class="md">
+  <div class="mh"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div class="mt2" style="margin:0">Pagos</div>
+    <button onclick="closeModal('m-pagos')" style="border:none;background:var(--bg);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-weight:600">Cerrar</button>
+  </div>
+  <div class="pres">
+    <div class="ps"><div class="psl">Total</div><div class="psv" id="ps-tot" style="color:var(--tx)">$ 0</div></div>
+    <div class="ps"><div class="psl">Pagado</div><div class="psv" id="ps-pag" style="color:var(--g)">$ 0</div></div>
+    <div class="ps"><div class="psl">Saldo</div><div class="psv" id="ps-sal" style="color:var(--dn)">$ 0</div></div>
+  </div>
+  <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:14px">
+    <div class="fl" style="margin-bottom:8px">Registrar nuevo pago</div>
+    <div style="display:flex;gap:8px">
+      <input type="number" class="fc" id="pag-monto" placeholder="$ Monto" min="1" style="flex:1;font-size:18px;font-weight:600">
+      <button class="btn bp" style="padding:12px 16px" onclick="agregarPago()">+ Agregar</button>
+    </div>
+    <div style="margin-top:8px"><input type="text" class="fc" id="pag-nota" placeholder="Nota (seña, resto...)" style="font-size:14px"></div>
+  </div>
+  <div id="pag-lista"></div>
+  <div class="empty" id="pag-empty" style="display:none;padding:24px 0"><div class="eic" style="font-size:32px">&#128184;</div><div>Sin pagos registrados.</div></div>
+</div></div>
+
+<!-- MODALES CATALOGO -->
+<div class="mo" id="m-flor"><div class="md">
+  <div class="mh"></div><div class="mt2" id="mf-ttl">Nueva flor</div><input type="hidden" id="mf-id">
+  <div class="fg"><label class="fl">Nombre</label><input class="fc" id="mf-nom" placeholder="Ej: Lilium"></div>
+  <div class="fg"><label class="fl">Precio por paquete ($)</label><input type="number" class="fc" id="mf-prec" min="0" placeholder="0"></div>
+  <div style="display:flex;gap:10px">
+    <button class="btn bs" style="flex:1" onclick="closeModal('m-flor')">Cancelar</button>
+    <button class="btn bp" style="flex:2" onclick="saveFlor()">Guardar</button>
+  </div>
+</div></div>
+
+<div class="mo" id="m-cli"><div class="md">
+  <div class="mh"></div><div class="mt2" id="mc-ttl">Nuevo cliente</div><input type="hidden" id="mc-id">
+  <div class="fg"><label class="fl">Nombre</label><input class="fc" id="mc-nom" placeholder="Ej: Florería del Centro"></div>
+  <div style="display:flex;gap:10px">
+    <button class="btn bs" style="flex:1" onclick="closeModal('m-cli')">Cancelar</button>
+    <button class="btn bp" style="flex:2" onclick="saveCliente()">Guardar</button>
+  </div>
+</div></div>
+
+<div class="mo" id="m-col"><div class="md">
+  <div class="mh"></div><div class="mt2" id="mcol-ttl">Nuevo color</div><input type="hidden" id="mcol-id">
+  <div class="fg"><label class="fl">Color</label><input class="fc" id="mcol-nom" placeholder="Ej: Salmón"></div>
+  <div style="display:flex;gap:10px">
+    <button class="btn bs" style="flex:1" onclick="closeModal('m-col')">Cancelar</button>
+    <button class="btn bp" style="flex:2" onclick="saveColor()">Guardar</button>
+  </div>
+</div></div>
+
+<script>
+// ═══════════════════════════ DB ═══════════════════════════
+var DB = null;
+function openDB() {
+  return new Promise(function(res, rej) {
+    var req = indexedDB.open('cultivoV1', 1);
+    req.onupgradeneeded = function(e) {
+      var d = e.target.result;
+      ['flores','clientes','colores','pedidos','pagos'].forEach(function(s) {
+        if (!d.objectStoreNames.contains(s))
+          d.createObjectStore(s, { keyPath: 'id', autoIncrement: true });
+      });
+      if (!d.objectStoreNames.contains('cfg'))
+        d.createObjectStore('cfg', { keyPath: 'k' });
+    };
+    req.onsuccess = function(e) { DB = e.target.result; res(); };
+    req.onerror   = function(e) { rej(e.target.error); };
+  });
+}
+function getAll(store) {
+  return new Promise(function(res, rej) {
+    var req = DB.transaction(store, 'readonly').objectStore(store).getAll();
+    req.onsuccess = function() { res(req.result); };
+    req.onerror   = function() { rej(req.error); };
+  });
+}
+function save(store, obj) {
+  return new Promise(function(res, rej) {
+    var data = Object.assign({}, obj);
+    if (!data.id) delete data.id;
+    var tx  = DB.transaction(store, 'readwrite');
+    var req = data.id ? tx.objectStore(store).put(data) : tx.objectStore(store).add(data);
+    req.onsuccess = function() { res(req.result); };
+    req.onerror   = function() { rej(req.error); };
+  });
+}
+function del(store, id) {
+  return new Promise(function(res, rej) {
+    var req = DB.transaction(store, 'readwrite').objectStore(store).delete(id);
+    req.onsuccess = function() { res(); };
+    req.onerror   = function() { rej(req.error); };
+  });
+}
+function cfgGet(k) {
+  return new Promise(function(res) {
+    var req = DB.transaction('cfg', 'readonly').objectStore('cfg').get(k);
+    req.onsuccess = function() { res(req.result ? req.result.v : null); };
+    req.onerror   = function() { res(null); };
+  });
+}
+function cfgSet(k, v) {
+  return new Promise(function(res, rej) {
+    var req = DB.transaction('cfg', 'readwrite').objectStore('cfg').put({ k: k, v: v });
+    req.onsuccess = function() { res(); };
+    req.onerror   = function() { rej(req.error); };
+  });
+}
+
+// ═══════════════════════════ STATE ═══════════════════════════
+var activeDate    = todayStr();
+var activeClient  = null;
+var curScreen     = 'pedidos';
+var curTab        = 'flores';
+var flores        = [];
+var clientes      = [];
+var colores       = [];
+var pedidos       = [];
+var pagos         = [];
+var doneSet       = new Set(); // "fecha||cliente"
+
+function todayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+}
+function pad(n) { return String(n).padStart(2, '0'); }
+function fmtD(s) {
+  var p = s.split('-');
+  var M = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return p[2] + ' ' + M[parseInt(p[1])-1] + ' ' + p[0];
+}
+function $M(n) { return '$ ' + Number(n).toLocaleString('es-AR'); }
+
+async function loadAll() {
+  flores   = await getAll('flores');
+  clientes = await getAll('clientes');
+  colores  = await getAll('colores');
+  pedidos  = await getAll('pedidos');
+  pagos    = await getAll('pagos');
+  var raw  = await cfgGet('done');
+  doneSet  = new Set(raw ? JSON.parse(raw) : []);
+}
+
+// ═══════════════════════════ NAV ═══════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.sc').forEach(function(s) { s.classList.remove('active'); });
+  document.querySelectorAll('.ni').forEach(function(n) { n.classList.remove('active'); });
+  document.getElementById('sc-' + name).classList.add('active');
+  var nav = document.getElementById('nav-' + name);
+  if (nav) nav.classList.add('active');
+  curScreen = name;
+
+  var isDet = name === 'detalle';
+  document.getElementById('back-btn').style.display   = isDet ? 'flex' : 'none';
+  document.getElementById('btn-recibo').style.display  = isDet ? 'inline-flex' : 'none';
+  document.getElementById('btn-pagos').style.display   = isDet ? 'inline-flex' : 'none';
+  document.getElementById('fab').style.display         = ['pedidos','detalle','catalogo'].includes(name) ? 'flex' : 'none';
+
+  var titles = { pedidos: '&#127816; Cultivo', recuento: '&#128203; Recuento', catalogo: '&#128230; Catálogo', config: '&#9881;&#65039; Config' };
+  document.getElementById('ttl').innerHTML  = isDet ? activeClient : (titles[name] || '&#127816; Cultivo');
+  document.getElementById('tsub').textContent = ['pedidos','detalle'].includes(name) ? fmtD(activeDate) : '';
+
+  if (name === 'pedidos')  renderDia();
+  if (name === 'detalle')  renderDet();
+  if (name === 'recuento') renderRecuento();
+  if (name === 'catalogo') renderCat();
+  if (name === 'config')   loadCfg();
+}
+
+function goBack() { showScreen('pedidos'); }
+
+function onFab() {
+  if (curScreen === 'pedidos')  { prepNcModal(); openModal('m-nc'); }
+  if (curScreen === 'detalle')  { prepPedModal(null); openModal('m-ped'); }
+  if (curScreen === 'catalogo') {
+    if (curTab === 'flores')   openAddFlor();
+    if (curTab === 'clientes') openAddCliente();
+    if (curTab === 'colores')  openAddColor();
+  }
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.mo').forEach(function(el) {
+  el.addEventListener('click', function(e) { if (e.target === el) el.classList.remove('open'); });
+});
+
+// ═══════════════════════════ FECHA ═══════════════════════════
+function onDateChange(v) {
+  activeDate = v;
+  document.getElementById('dlbl').textContent = fmtD(v);
+  document.getElementById('tsub').textContent = fmtD(v);
+  renderDia();
+}
+
+// ═══════════════════════════ VISTA DÍA ═══════════════════════════
+function pedsDia()   { return pedidos.filter(function(p) { return p.fecha === activeDate; }); }
+function pagsDia()   { return pagos.filter(function(p)   { return p.fecha === activeDate; }); }
+function pedsCli()   { return pedidos.filter(function(p) { return p.fecha === activeDate && p.cliente === activeClient; }); }
+function pagsCli()   { return pagos.filter(function(p)   { return p.fecha === activeDate && p.cliente === activeClient; }); }
+
+function clientesDia() {
+  var map = {};
+  pedsDia().forEach(function(p) {
+    if (!map[p.cliente]) map[p.cliente] = { nombre: p.cliente, list: [], total: 0 };
+    map[p.cliente].list.push(p);
+    map[p.cliente].total += p.total;
+  });
+  var list = Object.values(map);
+  list.forEach(function(c) { c.done = doneSet.has(activeDate + '||' + c.nombre); });
+  list.sort(function(a, b) {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    return a.nombre.localeCompare(b.nombre);
+  });
+  return list;
+}
+
+function renderDia() {
+  var cs  = clientesDia();
+  var el  = document.getElementById('clist');
+  var emp = document.getElementById('edia');
+  var sb  = document.getElementById('sbar');
+  var da  = document.getElementById('dayact');
+  if (!cs.length) {
+    el.innerHTML = ''; emp.style.display = 'block';
+    sb.style.display = 'none'; da.style.display = 'none'; return;
+  }
+  emp.style.display = 'none'; sb.style.display = 'flex'; da.style.display = 'flex';
+  document.getElementById('stot').textContent = $M(cs.reduce(function(s,c) { return s+c.total; }, 0));
+  document.getElementById('scnt').textContent = cs.length;
+
+  el.innerHTML = cs.map(function(c) {
+    var pag   = pagsDia().filter(function(p) { return p.cliente === c.nombre; }).reduce(function(s,p) { return s+p.monto; }, 0);
+    var sal   = c.total - pag;
+    var shtml = pag > 0 ? (sal <= 0 ? '<span style="color:var(--g);font-weight:600;font-size:11px">&#10003; Pagado</span>' : '<span style="color:var(--dn);font-size:11px">Saldo: ' + $M(sal) + '</span>') : '';
+    var emq   = c.list.filter(function(p) { return p.packed; }).length;
+    var nm    = c.nombre.replace(/'/g, "\\'");
+    var doneClass = c.done ? ' done' : '';
+    var badgeHtml = c.done ? '<span class="done-badge">&#10003; Listo</span>' : '';
+    var finBtn    = c.done
+      ? '<button class="btn bxs" style="background:var(--gp);color:var(--g)" onclick="toggleDone(\'' + nm + '\')">&#8629; Reabrir</button>'
+      : '<button class="btn bxs" style="background:#f0f0f0;color:#555" onclick="toggleDone(\'' + nm + '\')">&#10003; Finalizar</button>';
+    return '<div class="ccard' + doneClass + '">' +
+      '<div style="padding:14px 14px 10px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="abrirCli(\'' + nm + '\')">' +
+      '<div class="cav">' + c.nombre.charAt(0).toUpperCase() + '</div>' +
+      '<div style="flex:1;min-width:0">' +
+      '<div style="display:flex;align-items:center;gap:6px"><span class="cnom" style="font-weight:700;font-size:16px">' + c.nombre + '</span>' + badgeHtml + '</div>' +
+      '<div style="font-size:12px;color:var(--mu);margin-top:2px">' + c.list.length + ' flores' + (emq ? ' &middot; ' + emq + ' empaq &#10003;' : '') + ' ' + shtml + '</div>' +
+      '</div>' +
+      '<div class="ctot" style="font-weight:700;font-size:16px;color:var(--g)">' + $M(c.total) + '</div>' +
+      '</div>' +
+      '<div style="border-top:1px solid var(--bd);padding:8px 12px;display:flex;gap:8px">' +
+      '<button class="btn bs bxs" onclick="abrirCli(\'' + nm + '\')">Ver pedidos</button>' +
+      finBtn +
+      '<button class="btn bxs" style="background:#fdecea;color:var(--dn)" onclick="delCli(\'' + nm + '\')">Eliminar</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+async function toggleDone(nombre) {
+  var key = activeDate + '||' + nombre;
+  if (doneSet.has(key)) doneSet.delete(key); else doneSet.add(key);
+  await cfgSet('done', JSON.stringify(Array.from(doneSet)));
+  renderDia();
+}
+
+async function delCli(nombre) {
+  if (!confirm('Eliminar todos los pedidos de ' + nombre + '?')) return;
+  var pIds  = pedidos.filter(function(p) { return p.fecha === activeDate && p.cliente === nombre; }).map(function(p) { return p.id; });
+  var pgIds = pagos.filter(function(p)   { return p.fecha === activeDate && p.cliente === nombre; }).map(function(p) { return p.id; });
+  for (var i = 0; i < pIds.length;  i++) await del('pedidos', pIds[i]);
+  for (var i = 0; i < pgIds.length; i++) await del('pagos',   pgIds[i]);
+  var key = activeDate + '||' + nombre;
+  doneSet.delete(key);
+  await cfgSet('done', JSON.stringify(Array.from(doneSet)));
+  await loadAll(); renderDia(); toast('Eliminado');
+}
+
+// ═══════════════════════════ DETALLE ═══════════════════════════
+function abrirCli(nombre) { activeClient = nombre; showScreen('detalle'); }
+
+function renderDet() {
+  var ps     = pedsCli();
+  var total  = ps.reduce(function(s,p) { return s+p.total; }, 0);
+  var pagado = pagsCli().reduce(function(s,p) { return s+p.monto; }, 0);
+  var saldo  = total - pagado;
+  document.getElementById('dnom').textContent = activeClient;
+  document.getElementById('dtot').textContent = $M(total);
+  var sl = document.getElementById('dsal');
+  if (pagado > 0) {
+    sl.innerHTML = saldo <= 0 ? '<span style="color:var(--g);font-weight:700">&#10003; Pagado completo</span>' : 'Saldo: <strong>' + $M(saldo) + '</strong>';
+  } else { sl.textContent = ''; }
+
+  var el  = document.getElementById('dlist');
+  var emp = document.getElementById('edet');
+  if (!ps.length) { el.innerHTML = ''; emp.style.display = 'block'; return; }
+  emp.style.display = 'none';
+  el.innerHTML = ps.map(function(p) {
+    var pk = p.packed ? ' pk' : '';
+    return '<div class="pitm" id="pi-' + p.id + '">' +
+      '<div class="ccol' + pk + '" onclick="togglePk(' + p.id + ')">' +
+      '<div class="circ' + pk + '">' + (p.packed ? '&#10003;' : '') + '</div>' +
+      '</div>' +
+      '<div class="pbody">' +
+      '<div class="pflor' + pk + '">' + p.flor + '</div>' +
+      '<div class="pdet' + pk + '">' + (p.color ? p.color + ' &middot; ' : '') + p.cantidad + ' paq &middot; ' + $M(p.precio) + '/paq</div>' +
+      '</div>' +
+      '<div class="pright">' +
+      '<div class="ptot' + pk + '">' + $M(p.total) + '</div>' +
+      '<div class="pbtns">' +
+      '<button class="bic" onclick="editPed(' + p.id + ')">&#9999;&#65039;</button>' +
+      '<button class="bic red" onclick="delPed(' + p.id + ')">&#128465;&#65039;</button>' +
+      '</div></div></div>';
+  }).join('');
+}
+
+async function togglePk(id) {
+  var p = pedidos.find(function(x) { return x.id === id; });
+  if (!p) return;
+  p.packed = !p.packed;
+  await save('pedidos', p);
+  var el = document.getElementById('pi-' + id);
+  var pk = p.packed;
+  el.querySelector('.ccol').classList.toggle('pk', pk);
+  el.querySelector('.circ').classList.toggle('pk', pk);
+  el.querySelector('.circ').innerHTML = pk ? '&#10003;' : '';
+  el.querySelector('.pflor').classList.toggle('pk', pk);
+  el.querySelector('.pdet').classList.toggle('pk', pk);
+  el.querySelector('.ptot').classList.toggle('pk', pk);
+}
+
+// ═══════════════════════════ MODAL NUEVO CLIENTE ═══════════════════════════
+function prepNcModal() {
+  document.getElementById('nc-nom').value = '';
+  document.getElementById('dl-cli').innerHTML = clientes.map(function(c) { return '<option value="' + c.nombre + '">'; }).join('');
+}
+
+async function crearClienteDia() {
+  var nombre = document.getElementById('nc-nom').value.trim();
+  if (!nombre) { toast('Ingresá el nombre'); return; }
+  closeModal('m-nc');
+  activeClient = nombre;
+  showScreen('detalle');
+  setTimeout(function() { prepPedModal(null); openModal('m-ped'); }, 300);
+}
+
+// ═══════════════════════════ PEDIDOS CRUD ═══════════════════════════
+function prepPedModal(data) {
+  var sel = document.getElementById('ped-flor');
+  sel.innerHTML = '<option value="">Seleccioná</option>' +
+    flores.slice().sort(function(a,b) { return a.nombre.localeCompare(b.nombre); })
+      .map(function(f) { return '<option value="' + f.id + '" data-p="' + f.precio + '">' + f.nombre + '</option>'; }).join('');
+  document.getElementById('dl-col').innerHTML = colores.map(function(c) { return '<option value="' + c.nombre + '">'; }).join('');
+  if (data) {
+    document.getElementById('ped-title').textContent = 'Editar flor';
+    document.getElementById('ped-id').value    = data.id;
+    document.getElementById('ped-color').value = data.color || '';
+    document.getElementById('ped-cant').value  = data.cantidad;
+    document.getElementById('ped-prec').value  = data.precio;
+    var opt = Array.from(sel.options).find(function(o) { return o.text === data.flor; });
+    if (opt) sel.value = opt.value;
+  } else {
+    document.getElementById('ped-title').textContent = 'Nueva flor';
+    document.getElementById('ped-id').value = '';
+    ['ped-flor','ped-color','ped-cant','ped-prec'].forEach(function(id) { document.getElementById(id).value = ''; });
+  }
+  calcPrev();
+}
+function onFlorCh() {
+  var sel = document.getElementById('ped-flor');
+  var opt = sel.options[sel.selectedIndex];
+  if (opt && opt.dataset.p) document.getElementById('ped-prec').value = opt.dataset.p;
+  calcPrev();
+}
+function calcPrev() {
+  var c = parseFloat(document.getElementById('ped-cant').value) || 0;
+  var p = parseFloat(document.getElementById('ped-prec').value) || 0;
+  document.getElementById('ped-prev').textContent = $M(c * p);
+}
+async function savePedido() {
+  var sel  = document.getElementById('ped-flor');
+  var flor = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+  if (!flor || flor === 'Seleccioná') { toast('Seleccioná una flor'); return; }
+  var color    = document.getElementById('ped-color').value.trim();
+  var cantidad = parseFloat(document.getElementById('ped-cant').value);
+  var precio   = parseFloat(document.getElementById('ped-prec').value);
+  if (!cantidad || !precio) { toast('Completá cantidad y precio'); return; }
+  var eid = document.getElementById('ped-id').value;
+  var obj = { fecha: activeDate, cliente: activeClient, flor: flor, color: color, cantidad: cantidad, precio: precio, total: cantidad * precio, packed: false };
+  if (eid) { obj.id = parseInt(eid); obj.packed = (pedidos.find(function(p) { return p.id === obj.id; }) || {}).packed || false; }
+  await save('pedidos', obj);
+  await loadAll(); renderDet(); renderDia();
+  closeModal('m-ped'); toast(eid ? 'Actualizado' : 'Flor agregada');
+}
+function editPed(id) { var p = pedidos.find(function(x) { return x.id === id; }); if (p) { prepPedModal(p); openModal('m-ped'); } }
+async function delPed(id) {
+  if (!confirm('Eliminar?')) return;
+  await del('pedidos', id); await loadAll(); renderDet(); renderDia(); toast('Eliminado');
+}
+
+// ═══════════════════════════ PAGOS ═══════════════════════════
+function openPagos() {
+  document.getElementById('pag-monto').value = '';
+  document.getElementById('pag-nota').value  = '';
+  renderPagos(); openModal('m-pagos');
+}
+function renderPagos() {
+  var ps     = pedsCli();
+  var pgs    = pagsCli();
+  var total  = ps.reduce(function(s,p)  { return s+p.total;  }, 0);
+  var pagado = pgs.reduce(function(s,p) { return s+p.monto; }, 0);
+  var saldo  = total - pagado;
+  document.getElementById('ps-tot').textContent = $M(total);
+  document.getElementById('ps-pag').textContent = $M(pagado);
+  document.getElementById('ps-sal').textContent = $M(Math.max(0, saldo));
+  document.getElementById('ps-sal').style.color = saldo <= 0 ? 'var(--g)' : 'var(--dn)';
+  var lista = document.getElementById('pag-lista');
+  var empty = document.getElementById('pag-empty');
+  if (!pgs.length) { lista.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  lista.innerHTML = pgs.map(function(p) {
+    return '<div class="prow">' +
+      '<div style="flex:1"><div style="font-weight:600;font-size:15px">' + (p.nota || 'Pago') + '</div>' +
+      '<div style="font-size:11px;color:var(--mu);margin-top:2px">' + p.fechaHora + '</div></div>' +
+      '<div style="font-weight:700;font-size:16px;color:var(--g);margin-right:8px">' + $M(p.monto) + '</div>' +
+      '<button class="bic red" onclick="delPago(' + p.id + ')">&#128465;&#65039;</button>' +
+      '</div>';
+  }).join('');
+}
+async function agregarPago() {
+  var monto = parseFloat(document.getElementById('pag-monto').value);
+  var nota  = document.getElementById('pag-nota').value.trim();
+  if (!monto || monto <= 0) { toast('Ingresá un monto válido'); return; }
+  var now  = new Date();
+  var fh   = now.toLocaleDateString('es-AR') + ' ' + now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+  await save('pagos', { fecha: activeDate, cliente: activeClient, monto: monto, nota: nota, fechaHora: fh });
+  await loadAll();
+  document.getElementById('pag-monto').value = '';
+  document.getElementById('pag-nota').value  = '';
+  renderPagos(); renderDet(); renderDia(); toast('Pago registrado');
+}
+async function delPago(id) {
+  if (!confirm('Eliminar este pago?')) return;
+  await del('pagos', id); await loadAll(); renderPagos(); renderDet(); renderDia(); toast('Pago eliminado');
+}
+
+// ═══════════════════════════ RECUENTO ═══════════════════════════
+function renderRecuento() {
+  var lista = pedsDia();
+  document.getElementById('rtit').textContent = 'Recuento — ' + fmtD(activeDate);
+  var body = document.getElementById('rbody');
+  var emp  = document.getElementById('erec');
+  if (!lista.length) { body.innerHTML = ''; emp.style.display = 'block'; return; }
+  emp.style.display = 'none';
+  var ag = {};
+  lista.forEach(function(p) { var k = p.flor + '||' + (p.color||''); if (!ag[k]) ag[k] = { flor: p.flor, color: p.color||'—', t: 0 }; ag[k].t += p.cantidad; });
+  body.innerHTML = Object.values(ag).sort(function(a,b) { return a.flor.localeCompare(b.flor); })
+    .map(function(i) { return '<tr><td>' + i.flor + '</td><td>' + i.color + '</td><td class="rr">' + i.t + '</td></tr>'; }).join('');
+}
+
+// ═══════════════════════════ PDF ═══════════════════════════
+function showReciboModal() {
+  var cls = clientesDia();
+  document.getElementById('rchips').innerHTML = cls.map(function(c) {
+    return '<button class="chip' + (c.nombre === activeClient ? ' sel' : '') + '" onclick="selChip(this,&quot;' + c.nombre.replace(/'/g,"&#39;") + '&quot;)">' + c.nombre + '</button>';
+  }).join('');
+  document.getElementById('r-cli').value = activeClient || '';
+  document.getElementById('dl-cli-r').innerHTML = clientes.map(function(c) { return '<option value="' + c.nombre + '">'; }).join('');
+  openModal('m-recibo');
+}
+function selChip(btn, nombre) {
+  document.querySelectorAll('#rchips .chip').forEach(function(c) { c.classList.remove('sel'); });
+  btn.classList.add('sel');
+  document.getElementById('r-cli').value = nombre;
+}
+async function genPDF() {
+  var cli = document.getElementById('r-cli').value.trim();
+  if (!cli) { toast('Seleccioná un cliente'); return; }
+  var ps = pedsDia().filter(function(p) { return p.cliente.toLowerCase() === cli.toLowerCase(); });
+  if (!ps.length) { toast('Sin pedidos para ese cliente'); return; }
+  var nom  = await cfgGet('nom')  || 'Flores Directo de Cultivos';
+  var tel  = await cfgGet('tel')  || '';
+  var dir  = await cfgGet('dir')  || '';
+  var logo = await cfgGet('logo') || '';
+  var num  = parseInt(await cfgGet('num')) || 1;
+  await cfgSet('num', num + 1);
+  var total = ps.reduce(function(s,p) { return s+p.total; }, 0);
+  var jsPDF = window.jspdf.jsPDF;
+  var doc   = new jsPDF({ unit: 'mm', format: 'a4' });
+  var ML = 14, PW = 210, MR = 14, CW = 182, y = 14;
+  if (logo) { try { var img = await loadImg(logo); doc.addImage(img, 'JPEG', ML, y, 28, 20); } catch(e) {} }
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(30,30,30);
+  doc.text(nom, PW-MR, y+8, { align:'right' });
+  var ct = [tel ? 'Tel: '+tel : '', dir].filter(Boolean).join('   |   ');
+  if (ct) { doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100,100,100); doc.text(ct, PW-MR, y+15, { align:'right' }); }
+  y += 26; doc.setDrawColor(60,60,60); doc.setLineWidth(0.5); doc.line(ML,y,PW-MR,y); y += 7;
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(30,30,30);
+  doc.text('PRESUPUESTO N\u00b0 ' + num, ML, y);
+  doc.setFontSize(11); doc.text('FECHA   ' + activeDate.split('-').reverse().join('-'), PW-MR, y, { align:'right' }); y += 9;
+  doc.text('CLIENTE:   ' + cli.toUpperCase(), ML, y); y += 10;
+  doc.setFillColor(61,61,61); doc.rect(ML,y,CW,9,'F');
+  doc.setFontSize(10); doc.setTextColor(255,255,255);
+  doc.text('CANTIDAD',ML+2,y+6); doc.text('ART\u00cdCULO',ML+22,y+6); doc.text('PRECIO',ML+130,y+6); doc.text('IMPORTE',PW-MR,y+6,{align:'right'}); y += 9;
+  doc.setFont('helvetica','normal'); doc.setTextColor(30,30,30);
+  ps.forEach(function(p, i) {
+    if (i%2===1) { doc.setFillColor(242,242,242); doc.rect(ML,y,CW,8,'F'); }
+    doc.setFontSize(10);
+    doc.text(String(p.cantidad), ML+8, y+5.5, {align:'center'});
+    doc.text(p.color ? p.flor+' - '+p.color : p.flor, ML+22, y+5.5);
+    doc.text($M(p.precio), ML+130, y+5.5);
+    doc.text($M(p.total), PW-MR, y+5.5, {align:'right'}); y += 8;
+  });
+  y += 4; doc.setLineWidth(0.4); doc.line(ML,y,PW-MR,y); y += 1;
+  doc.setFillColor(232,232,232); doc.rect(ML,y,CW,10,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(13);
+  doc.text('TOTAL', ML+4, y+7); doc.text($M(total), PW-MR, y+7, {align:'right'});
+  doc.save('Recibo_' + cli.replace(/\s+/g,'_') + '_' + activeDate + '.pdf');
+  closeModal('m-recibo'); toast('PDF descargado');
+}
+function loadImg(url) {
+  return new Promise(function(res, rej) {
+    var img = new Image(); img.crossOrigin = 'anonymous';
+    img.onload = function() { var c = document.createElement('canvas'); c.width=img.width; c.height=img.height; c.getContext('2d').drawImage(img,0,0); res(c.toDataURL('image/jpeg')); };
+    img.onerror = rej; img.src = url;
+  });
+}
+async function exportRecuentoPDF() {
+  var lista = pedsDia();
+  if (!lista.length) { toast('No hay pedidos'); return; }
+  var ag = {};
+  lista.forEach(function(p) { var k=p.flor+'||'+(p.color||''); if(!ag[k]) ag[k]={flor:p.flor,color:p.color||'—',t:0}; ag[k].t+=p.cantidad; });
+  var items = Object.values(ag).sort(function(a,b) { return a.flor.localeCompare(b.flor); });
+  var tp = items.reduce(function(s,i) { return s+i.t; }, 0);
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF({unit:'mm',format:'a4'});
+  var ML=14,PW=210,MR=14,CW=182,y=14;
+  doc.setFillColor(45,106,79); doc.rect(ML,y,CW,10,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(255,255,255);
+  doc.text('RECUENTO \u2014 '+fmtD(activeDate), PW/2, y+7, {align:'center'}); y+=14;
+  doc.setFillColor(82,183,136); doc.rect(ML,y,CW,8,'F');
+  doc.setFontSize(10); doc.text('FLOR',ML+2,y+5.5); doc.text('COLOR',ML+90,y+5.5); doc.text('PAQUETES',PW-MR,y+5.5,{align:'right'}); y+=8;
+  doc.setFont('helvetica','normal'); doc.setTextColor(30,30,30);
+  items.forEach(function(item,i) { if(i%2===1){doc.setFillColor(240,250,244);doc.rect(ML,y,CW,7,'F');} doc.text(item.flor,ML+2,y+5); doc.text(item.color,ML+90,y+5); doc.text(String(item.t),PW-MR,y+5,{align:'right'}); y+=7; });
+  y+=3; doc.setFillColor(216,243,220); doc.rect(ML,y,CW,9,'F');
+  doc.setFont('helvetica','bold'); doc.text('TOTAL PAQUETES',ML+2,y+6); doc.text(String(tp),PW-MR,y+6,{align:'right'});
+  doc.save('Recuento_'+activeDate+'.pdf'); toast('Recuento exportado');
+}
+
+// ═══════════════════════════ CATALOGO ═══════════════════════════
+function switchTab(tab) {
+  curTab = tab;
+  document.querySelectorAll('.tab').forEach(function(t,i) { t.classList.toggle('active', ['flores','clientes','colores'][i] === tab); });
+  document.getElementById('tab-flores').style.display   = tab==='flores'   ? 'block':'none';
+  document.getElementById('tab-clientes').style.display = tab==='clientes' ? 'block':'none';
+  document.getElementById('tab-colores').style.display  = tab==='colores'  ? 'block':'none';
+}
+function renderCat() { renderFlores(); renderCli(); renderColors(); }
+function renderFlores(filter) {
+  filter = filter || '';
+  var el  = document.getElementById('flist');
+  var vis = flores.filter(function(x) { return x.nombre.toLowerCase().includes(filter.toLowerCase()); })
+    .sort(function(a,b) { return a.nombre.localeCompare(b.nombre); });
+  el.innerHTML = vis.length ? vis.map(function(f) {
+    return '<div class="li"><div><div class="lin">' + f.nombre + '</div><div class="lis">' + $M(f.precio) + '/paq</div></div>' +
+      '<div style="display:flex;gap:8px">' +
+      '<button class="bic" onclick="openEditFlor(' + f.id + ')">&#9999;&#65039;</button>' +
+      '<button class="bic red" onclick="delFlor(' + f.id + ')">&#128465;&#65039;</button>' +
+      '</div></div>';
+  }).join('') : '<div class="li muted">Sin resultados</div>';
+}
+function renderCli() {
+  var el = document.getElementById('klist');
+  el.innerHTML = clientes.slice().sort(function(a,b) { return a.nombre.localeCompare(b.nombre); }).map(function(c) {
+    return '<div class="li"><div class="lin">' + c.nombre + '</div>' +
+      '<div style="display:flex;gap:8px">' +
+      '<button class="bic" onclick="openEditCliente(' + c.id + ')">&#9999;&#65039;</button>' +
+      '<button class="bic red" onclick="delCliente(' + c.id + ')">&#128465;&#65039;</button>' +
+      '</div></div>';
+  }).join('') || '<div class="li muted">Sin clientes</div>';
+}
+function renderColors() {
+  var el = document.getElementById('colist');
+  el.innerHTML = colores.map(function(c) {
+    return '<div class="li"><div class="lin">' + c.nombre + '</div>' +
+      '<div style="display:flex;gap:8px">' +
+      '<button class="bic" onclick="openEditColor(' + c.id + ')">&#9999;&#65039;</button>' +
+      '<button class="bic red" onclick="delColor(' + c.id + ')">&#128465;&#65039;</button>' +
+      '</div></div>';
+  }).join('') || '<div class="li muted">Sin colores</div>';
+}
+
+function openAddFlor()   { document.getElementById('mf-ttl').textContent='Nueva flor';    document.getElementById('mf-id').value=''; document.getElementById('mf-nom').value=''; document.getElementById('mf-prec').value=''; openModal('m-flor'); }
+function openEditFlor(id){ var f=flores.find(function(x){return x.id===id;}); if(!f) return; document.getElementById('mf-ttl').textContent='Editar flor'; document.getElementById('mf-id').value=f.id; document.getElementById('mf-nom').value=f.nombre; document.getElementById('mf-prec').value=f.precio; openModal('m-flor'); }
+async function saveFlor() { var n=document.getElementById('mf-nom').value.trim(); var p=parseFloat(document.getElementById('mf-prec').value)||0; if(!n){toast('Ingresá el nombre');return;} var eid=document.getElementById('mf-id').value; var obj={nombre:n,precio:p}; if(eid)obj.id=parseInt(eid); await save('flores',obj); await loadAll(); renderFlores(); closeModal('m-flor'); toast(eid?'Actualizada':'Agregada'); }
+async function delFlor(id){ if(!confirm('Eliminar?'))return; await del('flores',id); await loadAll(); renderFlores(); toast('Eliminada'); }
+
+function openAddCliente()   { document.getElementById('mc-ttl').textContent='Nuevo cliente'; document.getElementById('mc-id').value=''; document.getElementById('mc-nom').value=''; openModal('m-cli'); }
+function openEditCliente(id){ var c=clientes.find(function(x){return x.id===id;}); if(!c) return; document.getElementById('mc-ttl').textContent='Editar cliente'; document.getElementById('mc-id').value=c.id; document.getElementById('mc-nom').value=c.nombre; openModal('m-cli'); }
+async function saveCliente() { var n=document.getElementById('mc-nom').value.trim(); if(!n){toast('Ingresá el nombre');return;} var eid=document.getElementById('mc-id').value; var obj={nombre:n}; if(eid)obj.id=parseInt(eid); await save('clientes',obj); await loadAll(); renderCli(); closeModal('m-cli'); toast(eid?'Actualizado':'Agregado'); }
+async function delCliente(id){ if(!confirm('Eliminar?'))return; await del('clientes',id); await loadAll(); renderCli(); toast('Eliminado'); }
+
+function openAddColor()   { document.getElementById('mcol-ttl').textContent='Nuevo color'; document.getElementById('mcol-id').value=''; document.getElementById('mcol-nom').value=''; openModal('m-col'); }
+function openEditColor(id){ var c=colores.find(function(x){return x.id===id;}); if(!c) return; document.getElementById('mcol-ttl').textContent='Editar color'; document.getElementById('mcol-id').value=c.id; document.getElementById('mcol-nom').value=c.nombre; openModal('m-col'); }
+async function saveColor() { var n=document.getElementById('mcol-nom').value.trim(); if(!n){toast('Ingresá el nombre');return;} var eid=document.getElementById('mcol-id').value; var obj={nombre:n}; if(eid)obj.id=parseInt(eid); await save('colores',obj); await loadAll(); renderColors(); closeModal('m-col'); toast(eid?'Actualizado':'Agregado'); }
+async function delColor(id){ if(!confirm('Eliminar?'))return; await del('colores',id); await loadAll(); renderColors(); toast('Eliminado'); }
+
+// ═══════════════════════════ CONFIG ═══════════════════════════
+async function loadCfg() {
+  document.getElementById('cfg-nom').value  = await cfgGet('nom')  || '';
+  document.getElementById('cfg-tel').value  = await cfgGet('tel')  || '';
+  document.getElementById('cfg-dir').value  = await cfgGet('dir')  || '';
+  document.getElementById('cfg-logo').value = await cfgGet('logo') || '';
+  document.getElementById('cfg-num').value  = await cfgGet('num')  || 1;
+}
+async function saveConfig() {
+  await cfgSet('nom',  document.getElementById('cfg-nom').value.trim());
+  await cfgSet('tel',  document.getElementById('cfg-tel').value.trim());
+  await cfgSet('dir',  document.getElementById('cfg-dir').value.trim());
+  await cfgSet('logo', document.getElementById('cfg-logo').value.trim());
+  await cfgSet('num',  parseInt(document.getElementById('cfg-num').value) || 1);
+  toast('Guardado'); showScreen('pedidos');
+}
+
+// ═══════════════════════════ TOAST ═══════════════════════════
+function toast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 2500);
+}
+
+// ═══════════════════════════ SEED + INIT ═══════════════════════════
+var FLORES_SEED = [
+  'Achilea','Aleli','Anémona','Aji','Azarero','Alstroemelia','Aspidistra','Azucena',
+  'Cala','Caléndula','Cebollita','Clavel','Clavel segunda','Clavelina','Conejito',
+  'Craspedia','Cresta','Crisantemo bocha','Crisantemo fideo','Crisantemo otome',
+  'Crisantemo mediano','Copete','Eucalipto','Epericum','Farolito','Fresias',
+  'Fillodendro','Gerbera','Gerbera segunda','Girasol','Gypsophila','Irís','Jazmín',
+  'Lilium','Limonium','Lisianthus','Margarita','Macetilla','Marimonia','Molluccela',
+  'Nardo','Olivo','Ornithogalum','Peonía',
+  'San Vicente Polaris','San Vicente tinturado','San Vicente puma','San Vicente manzanilla',
+  'Helecho sierra','Helecho plumoso','Pino','Trifer','Tulipán','Reina','Repollo',
+  'Rosa nacional x 40cm','Rosa nacional x 50cm','Rosa nacional x 60cm',
+  'Rosa importada x 50cm','Rosa importada x 60cm',
+  'Statice','Solidago','Strelitzis','Zinnia'
+];
+var COLORES_SEED = ['Amarillo','Blanco','Bordó','Fucsia','Lila','Naranja','Rosa','Rojo','Salmón','Verde','Violeta','Bicolor','Mixto'];
+
+async function init() {
+  await openDB();
+  await loadAll();
+  // Seed flores faltantes
+  var existF = new Set(flores.map(function(f) { return f.nombre; }));
+  var added = false;
+  for (var i = 0; i < FLORES_SEED.length; i++) {
+    if (!existF.has(FLORES_SEED[i])) { await save('flores', { nombre: FLORES_SEED[i], precio: 0 }); added = true; }
+  }
+  if (added) flores = await getAll('flores');
+  // Seed colores
+  if (!colores.length) {
+    for (var i = 0; i < COLORES_SEED.length; i++) await save('colores', { nombre: COLORES_SEED[i] });
+    colores = await getAll('colores');
+  }
+  document.getElementById('dpick').value    = activeDate;
+  document.getElementById('dlbl').textContent = fmtD(activeDate);
+  document.getElementById('tsub').textContent = fmtD(activeDate);
+  renderDia();
+}
+
+if ('serviceWorker' in navigator) {
+  var sw = 'const C="cv1";self.addEventListener("install",e=>{self.skipWaiting()});self.addEventListener("activate",e=>{self.clients.claim()});self.addEventListener("fetch",e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)))});';
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw], { type: 'application/javascript' }))).catch(function(){});
+}
+
+init();
+</script>
+</body>
+</html>
