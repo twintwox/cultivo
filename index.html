@@ -1774,12 +1774,13 @@
       var jsPDF = window.jspdf.jsPDF;
       var doc = new jsPDF({ unit: 'mm', format: 'a4' });
       var ML = 14, PW = 210, MR = 14, CW = 182, y = 14;
-      if (logo) { try { var img = await loadImg(logo); doc.addImage(img, 'JPEG', ML, y, 28, 20); } catch (e) { } }
+      var logoH = 0;
+      if (logo) { try { var logoData = await loadImg(logo); var MAX_W = 80, MAX_H = 40; var scale = Math.min(MAX_W / logoData.w, MAX_H / logoData.h); var logoW = logoData.w * scale; logoH = logoData.h * scale; doc.addImage(logoData.dataUrl, 'JPEG', ML, y, logoW, logoH); } catch (e) { } }
       doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(30, 30, 30);
       doc.text(nom, PW - MR, y + 8, { align: 'right' });
       var ct = [tel ? 'Tel: ' + tel : '', dir].filter(Boolean).join('   |   ');
       if (ct) { doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(100, 100, 100); doc.text(ct, PW - MR, y + 15, { align: 'right' }); }
-      y += 26; doc.setDrawColor(60, 60, 60); doc.setLineWidth(0.5); doc.line(ML, y, PW - MR, y); y += 7;
+      y += Math.max(logoH + 4, 26); doc.setDrawColor(60, 60, 60); doc.setLineWidth(0.5); doc.line(ML, y, PW - MR, y); y += 7;
       doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(30, 30, 30);
       doc.text('PRESUPUESTO N\u00b0 ' + num, ML, y);
       doc.setFontSize(11); doc.text('FECHA   ' + activeDate.split('-').reverse().join('-'), PW - MR, y, { align: 'right' }); y += 9;
@@ -1809,10 +1810,15 @@
       closeModal('m-recibo'); toast('PDF descargado');
     }
     function loadImg(src) {
-      if (src.startsWith('data:')) return Promise.resolve(src);
       return new Promise(function (res, rej) {
         var img = new Image(); img.crossOrigin = 'anonymous';
-        img.onload = function () { var c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d').drawImage(img, 0, 0); res(c.toDataURL('image/jpeg')); };
+        img.onload = function () {
+          var dataUrl = src.startsWith('data:') ? src : (function () {
+            var c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+            c.getContext('2d').drawImage(img, 0, 0); return c.toDataURL('image/jpeg');
+          })();
+          res({ dataUrl: dataUrl, w: img.naturalWidth, h: img.naturalHeight });
+        };
         img.onerror = rej; img.src = src;
       });
     }
