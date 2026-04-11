@@ -1,3 +1,4 @@
+import base64
 import pytest
 from playwright.sync_api import Page, expect
 
@@ -399,3 +400,57 @@ def test_install_btn_hides_on_appinstalled(page: Page):
     expect(page.locator("#btn-install")).to_be_visible()
     page.evaluate("() => window.dispatchEvent(new Event('appinstalled'))")
     expect(page.locator("#btn-install")).not_to_be_visible()
+
+
+# ─── Logo upload ──────────────────────────────────────────────────────────────
+
+# Minimal 1x1 white PNG for testing (69 bytes)
+TEST_LOGO = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4"
+    "//8/AAX+Av4N70a4AAAAAElFTkSuQmCC"
+)
+
+def go_to_config(page: Page):
+    page.locator(".tright button[onclick=\"showScreen('config')\"]").click()
+
+
+def test_logo_preview_oculto_por_defecto(page: Page):
+    """Sin logo guardado, el preview está oculto."""
+    go_to_config(page)
+    expect(page.locator("#logo-preview-wrap")).not_to_be_visible()
+
+
+def test_logo_upload_muestra_preview(page: Page):
+    """Al subir una imagen se muestra el preview."""
+    go_to_config(page)
+    page.locator("#cfg-logo-file").set_input_files(
+        {"name": "logo.jpg", "mimeType": "image/jpeg", "buffer": TEST_LOGO}
+    )
+    expect(page.locator("#logo-preview-wrap")).to_be_visible()
+    src = page.locator("#logo-preview").get_attribute("src")
+    assert src.startswith("data:image/jpeg")
+
+
+def test_logo_se_persiste_al_recargar(page: Page):
+    """El logo guardado sigue visible al volver a abrir Config."""
+    go_to_config(page)
+    page.locator("#cfg-logo-file").set_input_files(
+        {"name": "logo.jpg", "mimeType": "image/jpeg", "buffer": TEST_LOGO}
+    )
+    expect(page.locator("#logo-preview-wrap")).to_be_visible()
+
+    # Navegar a otra pantalla y volver a Config
+    page.locator("#nav-catalogo").click()
+    go_to_config(page)
+    expect(page.locator("#logo-preview-wrap")).to_be_visible()
+
+
+def test_logo_eliminar(page: Page):
+    """El botón Eliminar quita el logo y oculta el preview."""
+    go_to_config(page)
+    page.locator("#cfg-logo-file").set_input_files(
+        {"name": "logo.jpg", "mimeType": "image/jpeg", "buffer": TEST_LOGO}
+    )
+    expect(page.locator("#logo-preview-wrap")).to_be_visible()
+    page.locator("#logo-preview-wrap button").click()
+    expect(page.locator("#logo-preview-wrap")).not_to_be_visible()

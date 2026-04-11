@@ -931,7 +931,7 @@
         </div>
       </div>
       <div class="tright">
-        <button class="tbtn" id="btn-install" onclick="installApp()">&#11015;&#65039; Instalar</button>
+        <button class="tbtn" id="btn-install" style="display:none" onclick="installApp()">&#11015;&#65039; Instalar</button>
         <button class="tbtn" onclick="showScreen('config')">&#9881;&#65039;</button>
       </div>
     </div>
@@ -1044,8 +1044,15 @@
           <div><label class="fl">Dirección</label><input class="fc" id="cfg-dir" placeholder="Calle 123, Ciudad"></div>
           <div><label class="fl">Próximo N° de presupuesto</label><input class="fc" id="cfg-num" type="number" min="1"
               placeholder="1"></div>
-          <div><label class="fl">Logo (URL de imagen)</label><input class="fc" id="cfg-logo" placeholder="https://...">
-            <div class="muted mt10">URL pública de imagen.</div>
+          <div>
+            <label class="fl">Logo del negocio</label>
+            <div id="logo-preview-wrap" style="display:none;align-items:center;gap:10px;margin-bottom:10px">
+              <img id="logo-preview" style="max-height:60px;max-width:160px;border-radius:6px;border:1.5px solid var(--bd)">
+              <button type="button" class="btn bxs" style="background:#fdecea;color:var(--dn)" onclick="removeLogo()">✕ Eliminar</button>
+            </div>
+            <input type="file" id="cfg-logo-file" accept="image/*" style="display:none" onchange="onLogoFile(this)">
+            <button type="button" class="btn bs bsm" onclick="document.getElementById('cfg-logo-file').click()">&#128193; Subir imagen</button>
+            <div style="font-size:11px;color:var(--mu);margin-top:6px">JPG, PNG u otro formato de imagen.</div>
           </div>
         </div>
       </div>
@@ -1801,11 +1808,12 @@
       doc.save('Recibo_' + cli.replace(/\s+/g, '_') + '_' + activeDate + '.pdf');
       closeModal('m-recibo'); toast('PDF descargado');
     }
-    function loadImg(url) {
+    function loadImg(src) {
+      if (src.startsWith('data:')) return Promise.resolve(src);
       return new Promise(function (res, rej) {
         var img = new Image(); img.crossOrigin = 'anonymous';
         img.onload = function () { var c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d').drawImage(img, 0, 0); res(c.toDataURL('image/jpeg')); };
-        img.onerror = rej; img.src = url;
+        img.onerror = rej; img.src = src;
       });
     }
     async function exportRecuentoPDF() {
@@ -1878,16 +1886,52 @@
       document.getElementById('cfg-nom').value = await cfgGet('nom') || '';
       document.getElementById('cfg-tel').value = await cfgGet('tel') || '';
       document.getElementById('cfg-dir').value = await cfgGet('dir') || '';
-      document.getElementById('cfg-logo').value = await cfgGet('logo') || '';
       document.getElementById('cfg-num').value = await cfgGet('num') || 1;
+      var logo = await cfgGet('logo') || '';
+      if (logo) showLogoPreview(logo); else hideLogo();
     }
     async function saveConfig() {
       await cfgSet('nom', document.getElementById('cfg-nom').value.trim());
       await cfgSet('tel', document.getElementById('cfg-tel').value.trim());
       await cfgSet('dir', document.getElementById('cfg-dir').value.trim());
-      await cfgSet('logo', document.getElementById('cfg-logo').value.trim());
       await cfgSet('num', parseInt(document.getElementById('cfg-num').value) || 1);
       toast('Guardado'); showScreen('pedidos');
+    }
+    function onLogoFile(input) {
+      var file = input.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        var img = new Image();
+        img.onload = function () {
+          var MAX = 400;
+          var scale = Math.min(1, MAX / Math.max(img.width, img.height));
+          var canvas = document.createElement('canvas');
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          var ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          cfgSet('logo', dataUrl);
+          showLogoPreview(dataUrl);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+    function showLogoPreview(dataUrl) {
+      document.getElementById('logo-preview').src = dataUrl;
+      document.getElementById('logo-preview-wrap').style.display = 'flex';
+    }
+    function hideLogo() {
+      document.getElementById('logo-preview-wrap').style.display = 'none';
+    }
+    function removeLogo() {
+      cfgSet('logo', '');
+      hideLogo();
+      document.getElementById('cfg-logo-file').value = '';
     }
 
     // ═══════════════════════════ TOAST ═══════════════════════════
