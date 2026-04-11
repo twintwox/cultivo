@@ -40,17 +40,32 @@
       overflow-x: hidden
     }
 
+    #topwrap {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .2)
+    }
+
     .topbar {
       background: var(--g);
       color: #fff;
       padding: 14px 16px 10px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, .2)
+      justify-content: space-between
+    }
+
+    .actbar {
+      background: var(--g);
+      border-top: 1px solid rgba(255, 255, 255, .15);
+      padding: 6px 12px 10px;
+      display: none;
+      gap: 8px
+    }
+
+    .actbar.open {
+      display: flex
     }
 
     .tl {
@@ -903,19 +918,23 @@
 
 <body>
 
-  <div class="topbar">
-    <div class="tl">
-      <button id="back-btn" onclick="goBack()">&#8249;</button>
-      <div>
-        <div class="ttl" id="ttl">&#127803; Cultivo</div>
-        <div class="tsub" id="tsub"></div>
+  <div id="topwrap">
+    <div class="topbar">
+      <div class="tl">
+        <button id="back-btn" onclick="goBack()">&#8249;</button>
+        <div>
+          <div class="ttl" id="ttl">&#127803; Cultivo</div>
+          <div class="tsub" id="tsub"></div>
+        </div>
+      </div>
+      <div class="tright">
+        <button class="tbtn" onclick="showScreen('config')">&#9881;&#65039;</button>
       </div>
     </div>
-    <div class="tright">
-      <button class="tbtn" id="btn-desc" style="display:none" onclick="openDescModal()">&#128201; Descuento</button>
-      <button class="tbtn" id="btn-recibo" style="display:none" onclick="showReciboModal()">&#129534; Recibo</button>
-      <button class="tbtn" id="btn-pagos" style="display:none" onclick="openPagos()">&#128176; Pagos</button>
-      <button class="tbtn" onclick="showScreen('config')">&#9881;&#65039;</button>
+    <div class="actbar" id="actbar">
+      <button class="tbtn" style="flex:1" onclick="openDescModal()">&#128201; Descuento</button>
+      <button class="tbtn" style="flex:1" onclick="showReciboModal()">&#129534; Recibo</button>
+      <button class="tbtn" style="flex:1" onclick="openPagos()">&#128176; Pagos</button>
     </div>
   </div>
 
@@ -1310,9 +1329,7 @@
 
       var isDet = name === 'detalle';
       document.getElementById('back-btn').style.display = isDet ? 'flex' : 'none';
-      document.getElementById('btn-desc').style.display = isDet ? 'inline-flex' : 'none';
-      document.getElementById('btn-recibo').style.display = isDet ? 'inline-flex' : 'none';
-      document.getElementById('btn-pagos').style.display = isDet ? 'inline-flex' : 'none';
+      document.getElementById('actbar').classList.toggle('open', isDet);
       document.getElementById('fab').style.display = ['pedidos', 'catalogo'].includes(name) ? 'flex' : 'none';
 
       var titles = { pedidos: '&#127803; Cultivo', recuento: '&#128203; Recuento', catalogo: '&#127804; Catálogo', config: '&#9881;&#65039; Config' };

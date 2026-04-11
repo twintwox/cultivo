@@ -104,7 +104,7 @@ def test_cuj4_cobranzas_saldos(page: Page):
     expect(page.locator("#dtot")).to_have_text("$ 6.000")
 
     # Abrir el modal de Pagos
-    page.locator("#btn-pagos").click()
+    page.locator("#actbar button:has-text('Pagos')").click()
     expect(page.locator("#ps-tot")).to_have_text("$ 6.000")
 
     # Registrar pago parcial
@@ -129,7 +129,7 @@ def test_cuj5_generar_recibo_modal(page: Page):
     page.locator(".fi").filter(has_text="Aleli").locator(".fi-plus").click()
 
     # Abrir modal de Recibo
-    page.locator("#btn-recibo").click()
+    page.locator("#actbar button:has-text('Recibo')").click()
     expect(page.locator("#m-recibo")).to_be_visible()
     expect(page.locator("#r-cli")).to_have_value("Cliente PDF")
 
@@ -212,7 +212,7 @@ def test_cuj9_descuentos(page: Page):
     expect(page.locator("#dtot")).to_have_text("$ 1.000")
 
     # Aplicar descuento del 10%
-    page.locator("#btn-desc").click()
+    page.locator("#actbar button:has-text('Descuento')").click()
     expect(page.locator("#m-desc")).to_be_visible()
     page.locator("#md-pct").fill("10")
     page.locator("#md-reflejar").check() # Reflejado en recibo
@@ -291,7 +291,7 @@ def test_cuj13_eliminar_pago(page: Page):
     crear_cliente(page, "Cliente DelPago")
     page.locator(".fi").filter(has_text="Aleli").locator(".fi-plus").click()
 
-    page.locator("#btn-pagos").click()
+    page.locator("#actbar button:has-text('Pagos')").click()
     page.locator("#pag-monto").fill("500")
     page.locator("#m-pagos button:has-text('+ Agregar')").click()
     expect(page.locator("#ps-pag")).to_have_text("$ 500")
