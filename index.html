@@ -931,7 +931,8 @@
         </div>
       </div>
       <div class="tright">
-        <button class="tbtn" id="btn-install" style="display:none" onclick="installApp()">&#11015;&#65039; Instalar</button>
+        <button class="tbtn" id="btn-install" style="display:none" onclick="installApp()">&#11015;&#65039;
+          Instalar</button>
         <button class="tbtn" onclick="showScreen('config')">&#9881;&#65039;</button>
       </div>
     </div>
@@ -1047,11 +1048,14 @@
           <div>
             <label class="fl">Logo del negocio</label>
             <div id="logo-preview-wrap" style="display:none;align-items:center;gap:10px;margin-bottom:10px">
-              <img id="logo-preview" style="max-height:60px;max-width:160px;border-radius:6px;border:1.5px solid var(--bd)">
-              <button type="button" class="btn bxs" style="background:#fdecea;color:var(--dn)" onclick="removeLogo()">✕ Eliminar</button>
+              <img id="logo-preview"
+                style="max-height:60px;max-width:160px;border-radius:6px;border:1.5px solid var(--bd)">
+              <button type="button" class="btn bxs" style="background:#fdecea;color:var(--dn)" onclick="removeLogo()">✕
+                Eliminar</button>
             </div>
             <input type="file" id="cfg-logo-file" accept="image/*" style="display:none" onchange="onLogoFile(this)">
-            <button type="button" class="btn bs bsm" onclick="document.getElementById('cfg-logo-file').click()">&#128193; Subir imagen</button>
+            <button type="button" class="btn bs bsm"
+              onclick="document.getElementById('cfg-logo-file').click()">&#128193; Subir imagen</button>
             <div style="font-size:11px;color:var(--mu);margin-top:6px">JPG, PNG u otro formato de imagen.</div>
           </div>
         </div>
@@ -1752,7 +1756,7 @@
       if (!cli) { toast('Seleccioná un cliente'); return; }
       var ps = pedsDia().filter(function (p) { return p.cliente.toLowerCase() === cli.toLowerCase(); });
       if (!ps.length) { toast('Sin pedidos para ese cliente'); return; }
-      var nom = await cfgGet('nom') || 'Flores Directo de Cultivos';
+      var nom = await cfgGet('nom') || '';
       var tel = await cfgGet('tel') || '';
       var dir = await cfgGet('dir') || '';
       var logo = await cfgGet('logo') || '';
