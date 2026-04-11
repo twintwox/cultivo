@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <meta name="theme-color" content="#2d6a4f">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Cultivo">
+  <link rel="manifest" href="manifest.json">
   <title>Cultivo</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap"
     rel="stylesheet">
@@ -1926,8 +1929,7 @@
     }
 
     if ('serviceWorker' in navigator) {
-      var sw = 'const C="cv1";self.addEventListener("install",e=>{self.skipWaiting()});self.addEventListener("activate",e=>{self.clients.claim()});self.addEventListener("fetch",e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)))});';
-      navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw], { type: 'application/javascript' }))).catch(function () { });
+      navigator.serviceWorker.register('/sw.js').catch(function () { });
     }
 
     init();
