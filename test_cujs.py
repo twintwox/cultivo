@@ -100,8 +100,8 @@ def test_cuj4_cobranzas_saldos(page: Page):
     page.locator("#mp-prec").fill("3000")
     page.locator("#m-precio button:has-text('Guardar')").click()
 
-    # El total debe ser $6000 (2 × 3000)
-    expect(rosa_row.locator(".fi-tot")).to_have_text("$ 6.000")
+    # El total debe ser $6000 — verificar en el header de la orden
+    expect(page.locator("#dtot")).to_have_text("$ 6.000")
 
     # Abrir el modal de Pagos
     page.locator("#btn-pagos").click()

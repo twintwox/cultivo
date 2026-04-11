@@ -104,19 +104,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .prow:last-child{border-bottom:none}
 .mt10{margin-top:10px}.muted{color:var(--mu);font-size:13px}
 /* FLOR ITEMS (nuevo UX inline) */
-.fi{background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:6px;display:flex;align-items:center;padding:10px 12px;gap:10px;transition:opacity .2s,background .2s}
-.fi.fi-off{opacity:.38}
+.fi{background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:6px;display:flex;align-items:center;padding:10px 12px;gap:10px;transition:background .2s}
+.fi.fi-off{background:var(--bg)}
+.fi.fi-off .fi-name{opacity:.4}
+.fi.fi-off .fi-prc{opacity:.35}
+.fi.fi-off .fi-edit{opacity:0;pointer-events:none}
+.fi.fi-off .fi-q{opacity:.3}
+.fi.fi-off .fi-btn:not(.fi-plus){opacity:.25;pointer-events:none}
 .fi-pk{width:28px;height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;visibility:hidden}
 .fi.fi-on .fi-pk{visibility:visible}
 .fi-name{flex:1;font-weight:600;font-size:14px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fi.fi-on .fi-name{color:var(--tx)}
-.fi-right{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.fi-mid{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.fi-prc{font-size:12px;color:var(--mu);font-weight:500;white-space:nowrap}
+.fi-edit{border:none;background:none;font-size:15px;cursor:pointer;padding:2px;transition:opacity .15s}
+.fi-ctl{display:flex;align-items:center;gap:5px;flex-shrink:0}
 .fi-btn{width:28px;height:28px;border-radius:50%;border:2px solid var(--bd);background:none;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;line-height:1;color:var(--mu);transition:all .15s;flex-shrink:0}
 .fi-plus{border-color:var(--g);color:var(--g)}
 .fi-q{font-weight:700;font-size:15px;min-width:20px;text-align:center}
-.fi-edit{border:none;background:none;font-size:15px;cursor:pointer;padding:2px;flex-shrink:0;opacity:0;transition:opacity .15s}
-.fi.fi-on .fi-edit{opacity:.75}
-.fi-tot{font-weight:700;font-size:14px;color:var(--g);min-width:62px;text-align:right}
 </style>
 </head>
 <body>
@@ -562,12 +566,14 @@ function renderFlorRow(f) {
     '<div class="fi-pk" id="fipk-' + f.id + '" onclick="tglPkFlor(' + f.id + ')">' +
     '<div class="circ' + (pk ? ' pk' : '') + '">' + (pk ? '&#10003;' : '') + '</div></div>' +
     '<div class="fi-name">' + f.nombre + '</div>' +
-    '<div class="fi-right">' +
+    '<div class="fi-mid">' +
+    '<span class="fi-prc" id="fip-' + f.id + '">' + $M(precio) + '/paq</span>' +
+    '<button class="fi-edit" id="fie-' + f.id + '" onclick="editPrecioFlor(' + f.id + ')">&#9999;&#65039;</button>' +
+    '</div>' +
+    '<div class="fi-ctl">' +
     '<button class="fi-btn" onclick="decrFlor(' + f.id + ')">&#8722;</button>' +
     '<span class="fi-q" id="fiq-' + f.id + '">' + (cant || '') + '</span>' +
     '<button class="fi-btn fi-plus" onclick="incrFlor(' + f.id + ')">&#43;</button>' +
-    '<button class="fi-edit" id="fie-' + f.id + '" onclick="editPrecioFlor(' + f.id + ')">&#9999;&#65039;</button>' +
-    '<span class="fi-tot" id="fit-' + f.id + '">' + (active ? $M(cant * precio) : '') + '</span>' +
     '</div></div>';
 }
 
@@ -596,7 +602,8 @@ function updateFlorRow(fid) {
   if (!row) return;
   row.className = 'fi' + (active ? ' fi-on' : ' fi-off');
   document.getElementById('fiq-' + fid).textContent = cant || '';
-  document.getElementById('fit-' + fid).textContent = active ? $M(cant * precio) : '';
+  var prcEl = document.getElementById('fip-' + fid);
+  if (prcEl) prcEl.textContent = $M(precio) + '/paq';
   var pkEl = document.getElementById('fipk-' + fid);
   if (pkEl) {
     pkEl.style.visibility = active ? 'visible' : 'hidden';
