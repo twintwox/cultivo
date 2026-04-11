@@ -192,3 +192,39 @@ def test_cuj8_configuracion_negocio(page: Page):
     page.locator(".tright button[onclick=\"showScreen('config')\"]").click()
     expect(page.locator("#cfg-nom")).to_have_value("Florería Los Pinos")
     expect(page.locator("#cfg-tel")).to_have_value("111-222-3333")
+
+
+# ─── CUJ 9: Descuentos Globales de Pedido ────────────────────────────────────
+
+def test_cuj9_descuentos(page: Page):
+    crear_cliente(page, "Cliente Promo")
+
+    # Agregar dos flores para un subtotal de 4000 (asumiendo Rosa importada que fue 3000 antes, o lo ponemos a mano)
+    rosa_row = page.locator(".fi").filter(has_text="Rosa importada x 60cm")
+    rosa_row.locator(".fi-plus").click()
+    
+    rosa_row.locator(".fi-edit").click()
+    expect(page.locator("#m-precio")).to_be_visible()
+    page.locator("#mp-prec").fill("1000")
+    page.locator("#m-precio button:has-text('Guardar')").click()
+
+    # Total ahora es 1000
+    expect(page.locator("#dtot")).to_have_text("$ 1.000")
+
+    # Aplicar descuento del 10%
+    page.locator("#btn-desc").click()
+    expect(page.locator("#m-desc")).to_be_visible()
+    page.locator("#md-pct").fill("10")
+    page.locator("#md-reflejar").check() # Reflejado en recibo
+    page.locator("#m-desc button:has-text('Guardar')").click()
+    expect(page.locator("#m-desc")).not_to_be_visible()
+
+    # El subtotal (1000) tachado y el total (900) visible
+    dtot = page.locator("#dtot")
+    expect(dtot).to_contain_text("$ 1.000")
+    expect(dtot).to_contain_text("$ 900")
+
+    # Vamos a inicio a verificar tarjeta
+    page.locator("#back-btn").click()
+    card_index = page.locator(".ccard").filter(has_text="Cliente Promo")
+    expect(card_index.locator(".ctot")).to_have_text("$ 900")
