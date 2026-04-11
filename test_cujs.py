@@ -126,7 +126,7 @@ def test_cuj5_generar_recibo_modal(page: Page):
     page.locator("#m-recibo button:has-text('Cancelar')").click()
     
 def test_cuj6_recuento_diario(page: Page):
-    # Precondición: Crear dos pedidos del mismo tipo
+    # Precondición: Crear dos pedidos de flores diferentes
     page.locator("#fab").click()
     page.locator("#nc-nom").fill("Cliente A")
     page.locator("#m-nc button:has-text('Continuar')").click()
@@ -139,8 +139,7 @@ def test_cuj6_recuento_diario(page: Page):
     page.locator("#fab").click()
     page.locator("#nc-nom").fill("Cliente B")
     page.locator("#m-nc button:has-text('Continuar')").click()
-    page.locator("#ped-flor").select_option(label="Tulipán")
-    page.locator("#ped-color").fill("Rojo")
+    page.locator("#ped-flor").select_option(label="Aleli")
     page.locator("#ped-cant").fill("6")
     page.locator("#ped-prec").fill("100")
     page.locator("#m-ped button:has-text('Guardar')").click()
@@ -148,14 +147,12 @@ def test_cuj6_recuento_diario(page: Page):
     # Ir a tab Recuento
     page.locator("#nav-recuento").click()
     
-    # Verificar que las cantidades se sumen o junten
+    # Verificar que aparecen ambas flores y sus cantidades
     rbody = page.locator("#rbody")
     expect(rbody).to_contain_text("Tulipán")
-    expect(rbody).to_contain_text("Rojo")
-    expect(rbody).to_contain_text("6")
-    
-    expect(rbody).to_contain_text("—")
     expect(rbody).to_contain_text("4")
+    expect(rbody).to_contain_text("Aleli")
+    expect(rbody).to_contain_text("6")
 
 def test_cuj7_catalogo_crud(page: Page):
     # Ir a tab de Catálogo

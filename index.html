@@ -160,7 +160,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
         <span style="font-weight:600;font-size:14px" id="rtit">Recuento</span>
         <button class="btn bp bxs" onclick="exportRecuentoPDF()">&#11015; PDF</button>
       </div>
-      <table class="rtbl"><thead><tr><th>Flor</th><th>Color</th><th style="text-align:right">Paq</th></tr></thead><tbody id="rbody"></tbody></table>
+      <table class="rtbl"><thead><tr><th>Flor</th><th style="text-align:right">Paq</th></tr></thead><tbody id="rbody"></tbody></table>
     </div>
     <div class="empty" id="erec" style="display:none"><div class="eic">&#128203;</div><div>Cargá pedidos primero.</div></div>
   </div>
@@ -170,7 +170,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     <div class="tabs">
       <button class="tab active" onclick="switchTab('flores')">Flores</button>
       <button class="tab" onclick="switchTab('clientes')">Clientes</button>
-      <button class="tab" onclick="switchTab('colores')">Colores</button>
     </div>
     <div id="tab-flores">
       <div class="sb"><span class="sic">&#128269;</span><input type="text" placeholder="Buscar flor..." oninput="renderFlores(this.value)"></div>
@@ -180,10 +179,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     <div id="tab-clientes" style="display:none">
       <div class="card"><div id="klist"></div></div>
       <button class="btn bp bfu mt10" onclick="openAddCliente()">+ Agregar cliente</button>
-    </div>
-    <div id="tab-colores" style="display:none">
-      <div class="card"><div id="colist"></div></div>
-      <button class="btn bp bfu mt10" onclick="openAddColor()">+ Agregar color</button>
     </div>
   </div>
 
@@ -229,7 +224,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
   <div class="mh"></div><div class="mt2" id="ped-title">Nueva flor</div>
   <input type="hidden" id="ped-id">
   <div class="fg"><label class="fl">Tipo de flor</label><select class="fc" id="ped-flor" onchange="onFlorCh()"><option value="">Seleccioná</option></select></div>
-  <div class="fg"><label class="fl">Color</label><input list="dl-col" class="fc" id="ped-color" placeholder="Elegí o escribí"><datalist id="dl-col"></datalist></div>
   <div class="frow">
     <div class="fg" style="margin:0"><label class="fl">Cantidad (paq)</label><input type="number" class="fc" id="ped-cant" min="1" placeholder="0" oninput="calcPrev()"></div>
     <div class="fg" style="margin:0"><label class="fl">Precio / paq</label><input type="number" class="fc" id="ped-prec" min="0" placeholder="0" oninput="calcPrev()"></div>
@@ -298,14 +292,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
   </div>
 </div></div>
 
-<div class="mo" id="m-col"><div class="md">
-  <div class="mh"></div><div class="mt2" id="mcol-ttl">Nuevo color</div><input type="hidden" id="mcol-id">
-  <div class="fg"><label class="fl">Color</label><input class="fc" id="mcol-nom" placeholder="Ej: Salmón"></div>
-  <div style="display:flex;gap:10px">
-    <button class="btn bs" style="flex:1" onclick="closeModal('m-col')">Cancelar</button>
-    <button class="btn bp" style="flex:2" onclick="saveColor()">Guardar</button>
-  </div>
-</div></div>
+
 
 <script>
 // ═══════════════════════════ DB ═══════════════════════════
@@ -560,8 +547,8 @@ function renderDet() {
       '<div class="circ' + pk + '">' + (p.packed ? '&#10003;' : '') + '</div>' +
       '</div>' +
       '<div class="pbody">' +
-      '<div class="pflor' + pk + '">' + p.flor + '</div>' +
-      '<div class="pdet' + pk + '">' + (p.color ? p.color + ' &middot; ' : '') + p.cantidad + ' paq &middot; ' + $M(p.precio) + '/paq</div>' +
+      '<div class="pflor' + pk + '">' + (p.color ? p.flor + ' - ' + p.color : p.flor) + '</div>' +
+      '<div class="pdet' + pk + '">' + p.cantidad + ' paq &middot; ' + $M(p.precio) + '/paq</div>' +
       '</div>' +
       '<div class="pright">' +
       '<div class="ptot' + pk + '">' + $M(p.total) + '</div>' +
@@ -608,11 +595,9 @@ function prepPedModal(data) {
   sel.innerHTML = '<option value="">Seleccioná</option>' +
     flores.slice().sort(function(a,b) { return a.nombre.localeCompare(b.nombre); })
       .map(function(f) { return '<option value="' + f.id + '" data-p="' + f.precio + '">' + f.nombre + '</option>'; }).join('');
-  document.getElementById('dl-col').innerHTML = colores.map(function(c) { return '<option value="' + c.nombre + '">'; }).join('');
   if (data) {
     document.getElementById('ped-title').textContent = 'Editar flor';
     document.getElementById('ped-id').value    = data.id;
-    document.getElementById('ped-color').value = data.color || '';
     document.getElementById('ped-cant').value  = data.cantidad;
     document.getElementById('ped-prec').value  = data.precio;
     var opt = Array.from(sel.options).find(function(o) { return o.text === data.flor; });
@@ -620,7 +605,7 @@ function prepPedModal(data) {
   } else {
     document.getElementById('ped-title').textContent = 'Nueva flor';
     document.getElementById('ped-id').value = '';
-    ['ped-flor','ped-color','ped-cant','ped-prec'].forEach(function(id) { document.getElementById(id).value = ''; });
+    ['ped-flor','ped-cant','ped-prec'].forEach(function(id) { document.getElementById(id).value = ''; });
   }
   calcPrev();
 }
@@ -639,12 +624,11 @@ async function savePedido() {
   var sel  = document.getElementById('ped-flor');
   var flor = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
   if (!flor || flor === 'Seleccioná') { toast('Seleccioná una flor'); return; }
-  var color    = document.getElementById('ped-color').value.trim();
   var cantidad = parseFloat(document.getElementById('ped-cant').value);
   var precio   = parseFloat(document.getElementById('ped-prec').value);
   if (!cantidad || !precio) { toast('Completá cantidad y precio'); return; }
   var eid = document.getElementById('ped-id').value;
-  var obj = { fecha: activeDate, cliente: activeClient, flor: flor, color: color, cantidad: cantidad, precio: precio, total: cantidad * precio, packed: false };
+  var obj = { fecha: activeDate, cliente: activeClient, flor: flor, cantidad: cantidad, precio: precio, total: cantidad * precio, packed: false };
   if (eid) { obj.id = parseInt(eid); obj.packed = (pedidos.find(function(p) { return p.id === obj.id; }) || {}).packed || false; }
   await save('pedidos', obj);
   await loadAll(); renderDet(); renderDia();
@@ -711,9 +695,9 @@ function renderRecuento() {
   if (!lista.length) { body.innerHTML = ''; emp.style.display = 'block'; return; }
   emp.style.display = 'none';
   var ag = {};
-  lista.forEach(function(p) { var k = p.flor + '||' + (p.color||''); if (!ag[k]) ag[k] = { flor: p.flor, color: p.color||'—', t: 0 }; ag[k].t += p.cantidad; });
+  lista.forEach(function(p) { var k = p.flor; if (!ag[k]) ag[k] = { flor: p.flor, t: 0 }; ag[k].t += p.cantidad; });
   body.innerHTML = Object.values(ag).sort(function(a,b) { return a.flor.localeCompare(b.flor); })
-    .map(function(i) { return '<tr><td>' + i.flor + '</td><td>' + i.color + '</td><td class="rr">' + i.t + '</td></tr>'; }).join('');
+    .map(function(i) { return '<tr><td>' + i.flor + '</td><td class="rr">' + i.t + '</td></tr>'; }).join('');
 }
 
 // ═══════════════════════════ PDF ═══════════════════════════
@@ -786,7 +770,7 @@ async function exportRecuentoPDF() {
   var lista = pedsDia();
   if (!lista.length) { toast('No hay pedidos'); return; }
   var ag = {};
-  lista.forEach(function(p) { var k=p.flor+'||'+(p.color||''); if(!ag[k]) ag[k]={flor:p.flor,color:p.color||'—',t:0}; ag[k].t+=p.cantidad; });
+  lista.forEach(function(p) { var k=p.flor; if(!ag[k]) ag[k]={flor:p.flor,t:0}; ag[k].t+=p.cantidad; });
   var items = Object.values(ag).sort(function(a,b) { return a.flor.localeCompare(b.flor); });
   var tp = items.reduce(function(s,i) { return s+i.t; }, 0);
   var jsPDF = window.jspdf.jsPDF;
@@ -796,9 +780,9 @@ async function exportRecuentoPDF() {
   doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(255,255,255);
   doc.text('RECUENTO \u2014 '+fmtD(activeDate), PW/2, y+7, {align:'center'}); y+=14;
   doc.setFillColor(82,183,136); doc.rect(ML,y,CW,8,'F');
-  doc.setFontSize(10); doc.text('FLOR',ML+2,y+5.5); doc.text('COLOR',ML+90,y+5.5); doc.text('PAQUETES',PW-MR,y+5.5,{align:'right'}); y+=8;
+  doc.setFontSize(10); doc.text('FLOR',ML+2,y+5.5); doc.text('PAQUETES',PW-MR,y+5.5,{align:'right'}); y+=8;
   doc.setFont('helvetica','normal'); doc.setTextColor(30,30,30);
-  items.forEach(function(item,i) { if(i%2===1){doc.setFillColor(240,250,244);doc.rect(ML,y,CW,7,'F');} doc.text(item.flor,ML+2,y+5); doc.text(item.color,ML+90,y+5); doc.text(String(item.t),PW-MR,y+5,{align:'right'}); y+=7; });
+  items.forEach(function(item,i) { if(i%2===1){doc.setFillColor(240,250,244);doc.rect(ML,y,CW,7,'F');} doc.text(item.flor,ML+2,y+5); doc.text(String(item.t),PW-MR,y+5,{align:'right'}); y+=7; });
   y+=3; doc.setFillColor(216,243,220); doc.rect(ML,y,CW,9,'F');
   doc.setFont('helvetica','bold'); doc.text('TOTAL PAQUETES',ML+2,y+6); doc.text(String(tp),PW-MR,y+6,{align:'right'});
   doc.save('Recuento_'+activeDate+'.pdf'); toast('Recuento exportado');
@@ -807,12 +791,11 @@ async function exportRecuentoPDF() {
 // ═══════════════════════════ CATALOGO ═══════════════════════════
 function switchTab(tab) {
   curTab = tab;
-  document.querySelectorAll('.tab').forEach(function(t,i) { t.classList.toggle('active', ['flores','clientes','colores'][i] === tab); });
+  document.querySelectorAll('.tab').forEach(function(t,i) { t.classList.toggle('active', ['flores','clientes'][i] === tab); });
   document.getElementById('tab-flores').style.display   = tab==='flores'   ? 'block':'none';
   document.getElementById('tab-clientes').style.display = tab==='clientes' ? 'block':'none';
-  document.getElementById('tab-colores').style.display  = tab==='colores'  ? 'block':'none';
 }
-function renderCat() { renderFlores(); renderCli(); renderColors(); }
+function renderCat() { renderFlores(); renderCli(); }
 function renderFlores(filter) {
   filter = filter || '';
   var el  = document.getElementById('flist');
@@ -836,17 +819,6 @@ function renderCli() {
       '</div></div>';
   }).join('') || '<div class="li muted">Sin clientes</div>';
 }
-function renderColors() {
-  var el = document.getElementById('colist');
-  el.innerHTML = colores.map(function(c) {
-    return '<div class="li"><div class="lin">' + c.nombre + '</div>' +
-      '<div style="display:flex;gap:8px">' +
-      '<button class="bic" onclick="openEditColor(' + c.id + ')">&#9999;&#65039;</button>' +
-      '<button class="bic red" onclick="delColor(' + c.id + ')">&#128465;&#65039;</button>' +
-      '</div></div>';
-  }).join('') || '<div class="li muted">Sin colores</div>';
-}
-
 function openAddFlor()   { document.getElementById('mf-ttl').textContent='Nueva flor';    document.getElementById('mf-id').value=''; document.getElementById('mf-nom').value=''; document.getElementById('mf-prec').value=''; openModal('m-flor'); }
 function openEditFlor(id){ var f=flores.find(function(x){return x.id===id;}); if(!f) return; document.getElementById('mf-ttl').textContent='Editar flor'; document.getElementById('mf-id').value=f.id; document.getElementById('mf-nom').value=f.nombre; document.getElementById('mf-prec').value=f.precio; openModal('m-flor'); }
 async function saveFlor() { var n=document.getElementById('mf-nom').value.trim(); var p=parseFloat(document.getElementById('mf-prec').value)||0; if(!n){toast('Ingresá el nombre');return;} var eid=document.getElementById('mf-id').value; var obj={nombre:n,precio:p}; if(eid)obj.id=parseInt(eid); await save('flores',obj); await loadAll(); renderFlores(); closeModal('m-flor'); toast(eid?'Actualizada':'Agregada'); }
@@ -857,10 +829,7 @@ function openEditCliente(id){ var c=clientes.find(function(x){return x.id===id;}
 async function saveCliente() { var n=document.getElementById('mc-nom').value.trim(); if(!n){toast('Ingresá el nombre');return;} var eid=document.getElementById('mc-id').value; var obj={nombre:n}; if(eid)obj.id=parseInt(eid); await save('clientes',obj); await loadAll(); renderCli(); closeModal('m-cli'); toast(eid?'Actualizado':'Agregado'); }
 async function delCliente(id){ if(!confirm('Eliminar?'))return; await del('clientes',id); await loadAll(); renderCli(); toast('Eliminado'); }
 
-function openAddColor()   { document.getElementById('mcol-ttl').textContent='Nuevo color'; document.getElementById('mcol-id').value=''; document.getElementById('mcol-nom').value=''; openModal('m-col'); }
-function openEditColor(id){ var c=colores.find(function(x){return x.id===id;}); if(!c) return; document.getElementById('mcol-ttl').textContent='Editar color'; document.getElementById('mcol-id').value=c.id; document.getElementById('mcol-nom').value=c.nombre; openModal('m-col'); }
-async function saveColor() { var n=document.getElementById('mcol-nom').value.trim(); if(!n){toast('Ingresá el nombre');return;} var eid=document.getElementById('mcol-id').value; var obj={nombre:n}; if(eid)obj.id=parseInt(eid); await save('colores',obj); await loadAll(); renderColors(); closeModal('m-col'); toast(eid?'Actualizado':'Agregado'); }
-async function delColor(id){ if(!confirm('Eliminar?'))return; await del('colores',id); await loadAll(); renderColors(); toast('Eliminado'); }
+
 
 // ═══════════════════════════ CONFIG ═══════════════════════════
 async function loadCfg() {
