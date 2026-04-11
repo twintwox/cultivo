@@ -177,7 +177,7 @@ def test_cuj7_catalogo_crud(page: Page):
     page.locator("input[placeholder='Buscar flor...']").fill("Orquídea Test")
     flor_item = page.locator("#flist .li").first
     expect(flor_item).to_contain_text("Orquídea Test")
-    expect(flor_item).to_contain_text("$ 5.000 / unidad")
+    expect(flor_item).to_contain_text("$ 5.000 x unidad")
 
 
 # ─── CUJ 8: Configuración del Comercio ───────────────────────────────────────
@@ -228,3 +228,128 @@ def test_cuj9_descuentos(page: Page):
     page.locator("#back-btn").click()
     card_index = page.locator(".ccard").filter(has_text="Cliente Promo")
     expect(card_index.locator(".ctot")).to_have_text("$ 900")
+
+
+# ─── CUJ 10: Decrementar flor hasta 0 ────────────────────────────────────────
+
+def test_cuj10_decrementar_flor(page: Page):
+    crear_cliente(page, "Cliente Decr")
+    aleli_row = page.locator(".fi").filter(has_text="Aleli")
+
+    # Incrementar x2
+    aleli_row.locator(".fi-plus").click()
+    aleli_row.locator(".fi-plus").click()
+    expect(aleli_row.locator(".fi-q")).to_have_text("2")
+    expect(aleli_row).to_have_class("fi fi-on")
+
+    # Decrementar a 1
+    aleli_row.locator(".fi-btn").first.click()
+    expect(aleli_row.locator(".fi-q")).to_have_text("1")
+
+    # Decrementar a 0 → item vuelve a estado inactivo
+    aleli_row.locator(".fi-btn").first.click()
+    expect(aleli_row.locator(".fi-q")).to_have_text("")
+    expect(aleli_row).to_have_class("fi fi-off")
+
+
+# ─── CUJ 11: Eliminar cliente del día ────────────────────────────────────────
+
+def test_cuj11_eliminar_cliente_dia(page: Page):
+    crear_cliente(page, "Cliente Borrar")
+    page.locator(".fi").filter(has_text="Aleli").locator(".fi-plus").click()
+    page.locator("#back-btn").click()
+
+    card = page.locator(".ccard").filter(has_text="Cliente Borrar")
+    expect(card).to_be_visible()
+
+    page.once("dialog", lambda d: d.accept())
+    card.locator("button", has_text="Eliminar").click()
+
+    expect(card).not_to_be_visible()
+
+
+# ─── CUJ 12: Reabrir un pedido finalizado ────────────────────────────────────
+
+def test_cuj12_reabrir_pedido(page: Page):
+    crear_cliente(page, "Cliente Reabrir")
+    page.locator(".fi").filter(has_text="Aleli").locator(".fi-plus").click()
+    page.locator("#back-btn").click()
+
+    card = page.locator(".ccard").filter(has_text="Cliente Reabrir")
+    card.locator("button", has_text="Finalizar").click()
+    expect(card).to_have_class("ccard done")
+
+    # Reabrir el pedido
+    card.locator("button", has_text="Reabrir").click()
+    expect(card).not_to_have_class("ccard done")
+    expect(card).not_to_contain_text("✓ Listo")
+
+
+# ─── CUJ 13: Eliminar pago registrado ────────────────────────────────────────
+
+def test_cuj13_eliminar_pago(page: Page):
+    crear_cliente(page, "Cliente DelPago")
+    page.locator(".fi").filter(has_text="Aleli").locator(".fi-plus").click()
+
+    page.locator("#btn-pagos").click()
+    page.locator("#pag-monto").fill("500")
+    page.locator("#m-pagos button:has-text('+ Agregar')").click()
+    expect(page.locator("#ps-pag")).to_have_text("$ 500")
+
+    # Eliminar el pago (acepta el confirm)
+    page.once("dialog", lambda d: d.accept())
+    page.locator("#pag-lista .bic.red").first.click()
+
+    expect(page.locator("#ps-pag")).to_have_text("$ 0")
+    expect(page.locator("#pag-empty")).to_be_visible()
+
+
+# ─── CUJ 14: Editar flor en catálogo ─────────────────────────────────────────
+
+def test_cuj14_editar_flor_catalogo(page: Page):
+    page.locator("#nav-catalogo").click()
+
+    # Agregar una nueva flor
+    page.locator("button:has-text('+ Agregar flor')").click()
+    page.locator("#mf-nom").fill("Flor Editable")
+    page.locator("#mf-prec").fill("2000")
+    page.locator("#m-flor button", has_text="Guardar").click()
+    expect(page.locator("#m-flor")).not_to_be_visible()
+
+    # Buscarla y abrir edición
+    page.locator("input[placeholder='Buscar flor...']").fill("Flor Editable")
+    flor_item = page.locator("#flist .li").first
+    flor_item.locator("button").first.click()  # botón ✏️
+
+    expect(page.locator("#m-flor")).to_be_visible()
+    expect(page.locator("#mf-ttl")).to_have_text("Editar flor")
+
+    # Cambiar precio
+    page.locator("#mf-prec").fill("3500")
+    page.locator("#m-flor button", has_text="Guardar").click()
+    expect(page.locator("#m-flor")).not_to_be_visible()
+
+    # Verificar precio actualizado en la lista
+    page.locator("input[placeholder='Buscar flor...']").fill("Flor Editable")
+    expect(page.locator("#flist .li").first).to_contain_text("$ 3.500 x unidad")
+
+
+# ─── CUJ 15: Catálogo — gestión de clientes ──────────────────────────────────
+
+def test_cuj15_catalogo_clientes(page: Page):
+    page.locator("#nav-catalogo").click()
+    page.locator(".tab", has_text="Clientes").click()
+
+    # Agregar cliente al catálogo
+    page.locator("button:has-text('+ Agregar cliente')").click()
+    expect(page.locator("#m-cli")).to_be_visible()
+    page.locator("#mc-nom").fill("Mayorista Test")
+    page.locator("#m-cli button", has_text="Guardar").click()
+    expect(page.locator("#m-cli")).not_to_be_visible()
+    expect(page.locator("#klist")).to_contain_text("Mayorista Test")
+
+    # Eliminar el cliente
+    cliente_item = page.locator("#klist .li").filter(has_text="Mayorista Test")
+    page.once("dialog", lambda d: d.accept())
+    cliente_item.locator(".bic.red").click()
+    expect(page.locator("#klist")).not_to_contain_text("Mayorista Test")
