@@ -764,6 +764,11 @@
       font-size: 13px
     }
 
+    #dlist {
+      display: flex;
+      flex-direction: column;
+    }
+
     /* FLOR ITEMS (nuevo UX inline) */
     .fi {
       background: var(--sf);
@@ -774,11 +779,16 @@
       align-items: center;
       padding: 10px 12px;
       gap: 10px;
-      transition: background .2s
+      transition: background .2s;
+    }
+
+    .fi.fi-on {
+      order: 1;
     }
 
     .fi.fi-off {
-      background: var(--bg)
+      background: var(--bg);
+      order: 3;
     }
 
     .fi.fi-off .fi-name {
@@ -1449,7 +1459,8 @@
         el.innerHTML = '<div class="empty"><div class="eic">&#127800;</div><div>Agregá artículos en el Catálogo primero.</div></div>';
         return;
       }
-      el.innerHTML = sortedFlores.map(renderFlorRow).join('');
+      el.innerHTML = sortedFlores.map(renderFlorRow).join('') +
+        '<div id="dlist-sep" style="order:2; display:flex; align-items:center; margin:16px 0; color:var(--mu); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; gap:10px;"><div style="flex:1;height:1px;background:var(--bd)"></div>Catálogo<div style="flex:1;height:1px;background:var(--bd)"></div></div>';
     }
 
     function renderFlorRow(f) {
