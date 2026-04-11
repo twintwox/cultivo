@@ -353,3 +353,49 @@ def test_cuj15_catalogo_clientes(page: Page):
     page.once("dialog", lambda d: d.accept())
     cliente_item.locator(".bic.red").click()
     expect(page.locator("#klist")).not_to_contain_text("Mayorista Test")
+
+
+# ─── Botón Instalar App ───────────────────────────────────────────────────────
+
+MOCK_PROMPT = """() => {
+    window._promptCalled = false;
+    const e = new Event('beforeinstallprompt');
+    e.preventDefault = () => {};
+    e.prompt = () => { window._promptCalled = true; return Promise.resolve(); };
+    e.userChoice = Promise.resolve({ outcome: 'accepted' });
+    window.dispatchEvent(e);
+}"""
+
+
+def test_install_btn_hidden_by_default(page: Page):
+    """El botón está oculto por defecto (no hay beforeinstallprompt)."""
+    expect(page.locator("#btn-install")).not_to_be_visible()
+
+
+def test_install_btn_visible_after_beforeinstallprompt(page: Page):
+    """El botón aparece cuando el navegador dispara beforeinstallprompt."""
+    page.evaluate(MOCK_PROMPT)
+    expect(page.locator("#btn-install")).to_be_visible()
+
+
+def test_install_btn_calls_prompt_on_click(page: Page):
+    """Al hacer clic se llama a prompt() del evento diferido."""
+    page.evaluate(MOCK_PROMPT)
+    page.locator("#btn-install").click()
+    assert page.evaluate("() => window._promptCalled")
+
+
+def test_install_btn_hides_after_user_choice(page: Page):
+    """El botón desaparece una vez que el usuario responde al diálogo."""
+    page.evaluate(MOCK_PROMPT)
+    expect(page.locator("#btn-install")).to_be_visible()
+    page.locator("#btn-install").click()
+    expect(page.locator("#btn-install")).not_to_be_visible()
+
+
+def test_install_btn_hides_on_appinstalled(page: Page):
+    """El botón desaparece si el evento appinstalled se dispara (app ya instalada)."""
+    page.evaluate(MOCK_PROMPT)
+    expect(page.locator("#btn-install")).to_be_visible()
+    page.evaluate("() => window.dispatchEvent(new Event('appinstalled'))")
+    expect(page.locator("#btn-install")).not_to_be_visible()
