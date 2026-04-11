@@ -89,7 +89,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .empty{text-align:center;padding:40px 20px;color:var(--mu)}
 .eic{font-size:40px;margin-bottom:10px}
-.pbar{background:var(--gp);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .chip{padding:7px 13px;border-radius:20px;border:1.5px solid var(--bd);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;background:none;transition:all .15s}
 .chip.sel{background:var(--g);color:#fff;border-color:var(--g)}
 .rtbl{width:100%;border-collapse:collapse;font-size:14px}
@@ -104,6 +103,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .prow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--bd)}
 .prow:last-child{border-bottom:none}
 .mt10{margin-top:10px}.muted{color:var(--mu);font-size:13px}
+/* FLOR ITEMS (nuevo UX inline) */
+.fi{background:var(--sf);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:6px;display:flex;align-items:center;padding:10px 12px;gap:10px;transition:opacity .2s,background .2s}
+.fi.fi-off{opacity:.38}
+.fi-pk{width:28px;height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;visibility:hidden}
+.fi.fi-on .fi-pk{visibility:visible}
+.fi-name{flex:1;font-weight:600;font-size:14px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi.fi-on .fi-name{color:var(--tx)}
+.fi-right{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.fi-btn{width:28px;height:28px;border-radius:50%;border:2px solid var(--bd);background:none;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;line-height:1;color:var(--mu);transition:all .15s;flex-shrink:0}
+.fi-plus{border-color:var(--g);color:var(--g)}
+.fi-q{font-weight:700;font-size:15px;min-width:20px;text-align:center}
+.fi-edit{border:none;background:none;font-size:15px;cursor:pointer;padding:2px;flex-shrink:0;opacity:0;transition:opacity .15s}
+.fi.fi-on .fi-edit{opacity:.75}
+.fi-tot{font-weight:700;font-size:14px;color:var(--g);min-width:62px;text-align:right}
 </style>
 </head>
 <body>
@@ -219,19 +232,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
   </div>
 </div></div>
 
-<!-- MODAL: pedido -->
-<div class="mo" id="m-ped"><div class="md">
-  <div class="mh"></div><div class="mt2" id="ped-title">Nueva flor</div>
-  <input type="hidden" id="ped-id">
-  <div class="fg"><label class="fl">Tipo de flor</label><select class="fc" id="ped-flor" onchange="onFlorCh()"><option value="">Seleccioná</option></select></div>
-  <div class="frow">
-    <div class="fg" style="margin:0"><label class="fl">Cantidad (paq)</label><input type="number" class="fc" id="ped-cant" min="1" placeholder="0" oninput="calcPrev()"></div>
-    <div class="fg" style="margin:0"><label class="fl">Precio / paq</label><input type="number" class="fc" id="ped-prec" min="0" placeholder="0" oninput="calcPrev()"></div>
-  </div>
-  <div class="pbar"><span style="font-weight:600;color:var(--g)">Total</span><span style="font-weight:700;font-size:18px;color:var(--g)" id="ped-prev">$ 0</span></div>
+<!-- MODAL: pedido - REMOVIDO: reemplazado por lista inline -->
+
+<!-- MODAL: precio -->
+<div class="mo" id="m-precio"><div class="md">
+  <div class="mh"></div><div class="mt2">Editar precio</div>
+  <div id="mp-flornom" style="color:var(--mu);font-size:14px;margin-bottom:14px"></div>
+  <div class="fg"><label class="fl">Precio / paq</label><input type="number" class="fc" id="mp-prec" min="0" placeholder="0"></div>
   <div style="display:flex;gap:10px">
-    <button class="btn bs" style="flex:1" onclick="closeModal('m-ped')">Cancelar</button>
-    <button class="btn bp" style="flex:2" onclick="savePedido()">Guardar</button>
+    <button class="btn bs" style="flex:1" onclick="closeModal('m-precio')">Cancelar</button>
+    <button class="btn bp" style="flex:2" onclick="savePrecioFlor()">Guardar</button>
   </div>
 </div></div>
 
@@ -359,10 +369,11 @@ var curScreen     = 'pedidos';
 var curTab        = 'flores';
 var flores        = [];
 var clientes      = [];
-var colores       = [];
 var pedidos       = [];
 var pagos         = [];
-var doneSet       = new Set(); // "fecha||cliente"
+var doneSet       = new Set();
+var draftPedidos  = {}; // florNombre → {cant, precio, pedidoId, packed}
+var editingFlorId = null;
 
 function todayStr() {
   var d = new Date();
@@ -379,7 +390,6 @@ function $M(n) { return '$ ' + Number(n).toLocaleString('es-AR'); }
 async function loadAll() {
   flores   = await getAll('flores');
   clientes = await getAll('clientes');
-  colores  = await getAll('colores');
   pedidos  = await getAll('pedidos');
   pagos    = await getAll('pagos');
   var raw  = await cfgGet('done');
@@ -399,7 +409,7 @@ function showScreen(name) {
   document.getElementById('back-btn').style.display   = isDet ? 'flex' : 'none';
   document.getElementById('btn-recibo').style.display  = isDet ? 'inline-flex' : 'none';
   document.getElementById('btn-pagos').style.display   = isDet ? 'inline-flex' : 'none';
-  document.getElementById('fab').style.display         = ['pedidos','detalle','catalogo'].includes(name) ? 'flex' : 'none';
+  document.getElementById('fab').style.display         = ['pedidos','catalogo'].includes(name) ? 'flex' : 'none';
 
   var titles = { pedidos: '&#127803; Cultivo', recuento: '&#128203; Recuento', catalogo: '&#127804; Catálogo', config: '&#9881;&#65039; Config' };
   document.getElementById('ttl').innerHTML  = isDet ? activeClient : (titles[name] || '&#127803; Cultivo');
@@ -416,11 +426,9 @@ function goBack() { showScreen('pedidos'); }
 
 function onFab() {
   if (curScreen === 'pedidos')  { prepNcModal(); openModal('m-nc'); }
-  if (curScreen === 'detalle')  { prepPedModal(null); openModal('m-ped'); }
   if (curScreen === 'catalogo') {
     if (curTab === 'flores')   openAddFlor();
     if (curTab === 'clientes') openAddCliente();
-    if (curTab === 'colores')  openAddColor();
   }
 }
 
@@ -521,10 +529,49 @@ async function delCli(nombre) {
   await loadAll(); renderDia(); toast('Eliminado');
 }
 
-// ═══════════════════════════ DETALLE ═══════════════════════════
+// ═══════════════════════════ DETALLE - NUEVO UX INLINE ═══════════════════════════
 function abrirCli(nombre) { activeClient = nombre; showScreen('detalle'); }
 
 function renderDet() {
+  // Header con total y saldo
+  updateDetHeader();
+
+  // Construir draft desde pedidos existentes en DB
+  draftPedidos = {};
+  pedsCli().forEach(function(p) {
+    draftPedidos[p.flor] = { cant: p.cantidad, precio: p.precio, pedidoId: p.id, packed: p.packed || false };
+  });
+
+  // Renderizar lista de todas las flores
+  var el = document.getElementById('dlist');
+  var sortedFlores = flores.slice().sort(function(a,b) { return a.nombre.localeCompare(b.nombre); });
+  if (!sortedFlores.length) {
+    el.innerHTML = '<div class="empty"><div class="eic">&#127800;</div><div>Agregá artículos en el Catálogo primero.</div></div>';
+    return;
+  }
+  el.innerHTML = sortedFlores.map(renderFlorRow).join('');
+}
+
+function renderFlorRow(f) {
+  var d = draftPedidos[f.nombre];
+  var cant = d ? d.cant : 0;
+  var precio = d ? d.precio : f.precio;
+  var active = cant > 0;
+  var pk = d && d.packed;
+  return '<div class="fi' + (active ? ' fi-on' : ' fi-off') + '" id="fi-' + f.id + '">' +
+    '<div class="fi-pk" id="fipk-' + f.id + '" onclick="tglPkFlor(' + f.id + ')">' +
+    '<div class="circ' + (pk ? ' pk' : '') + '">' + (pk ? '&#10003;' : '') + '</div></div>' +
+    '<div class="fi-name">' + f.nombre + '</div>' +
+    '<div class="fi-right">' +
+    '<button class="fi-btn" onclick="decrFlor(' + f.id + ')">&#8722;</button>' +
+    '<span class="fi-q" id="fiq-' + f.id + '">' + (cant || '') + '</span>' +
+    '<button class="fi-btn fi-plus" onclick="incrFlor(' + f.id + ')">&#43;</button>' +
+    '<button class="fi-edit" id="fie-' + f.id + '" onclick="editPrecioFlor(' + f.id + ')">&#9999;&#65039;</button>' +
+    '<span class="fi-tot" id="fit-' + f.id + '">' + (active ? $M(cant * precio) : '') + '</span>' +
+    '</div></div>';
+}
+
+function updateDetHeader() {
   var ps     = pedsCli();
   var total  = ps.reduce(function(s,p) { return s+p.total; }, 0);
   var pagado = pagsCli().reduce(function(s,p) { return s+p.monto; }, 0);
@@ -535,43 +582,106 @@ function renderDet() {
   if (pagado > 0) {
     sl.innerHTML = saldo <= 0 ? '<span style="color:var(--g);font-weight:700">&#10003; Pagado completo</span>' : 'Saldo: <strong>' + $M(saldo) + '</strong>';
   } else { sl.textContent = ''; }
-
-  var el  = document.getElementById('dlist');
-  var emp = document.getElementById('edet');
-  if (!ps.length) { el.innerHTML = ''; emp.style.display = 'block'; return; }
-  emp.style.display = 'none';
-  el.innerHTML = ps.map(function(p) {
-    var pk = p.packed ? ' pk' : '';
-    return '<div class="pitm" id="pi-' + p.id + '">' +
-      '<div class="ccol' + pk + '" onclick="togglePk(' + p.id + ')">' +
-      '<div class="circ' + pk + '">' + (p.packed ? '&#10003;' : '') + '</div>' +
-      '</div>' +
-      '<div class="pbody">' +
-      '<div class="pflor' + pk + '">' + (p.color ? p.flor + ' - ' + p.color : p.flor) + '</div>' +
-      '<div class="pdet' + pk + '">' + p.cantidad + ' paq &middot; ' + $M(p.precio) + '/paq</div>' +
-      '</div>' +
-      '<div class="pright">' +
-      '<div class="ptot' + pk + '">' + $M(p.total) + '</div>' +
-      '<div class="pbtns">' +
-      '<button class="bic" onclick="editPed(' + p.id + ')">&#9999;&#65039;</button>' +
-      '<button class="bic red" onclick="delPed(' + p.id + ')">&#128465;&#65039;</button>' +
-      '</div></div></div>';
-  }).join('');
 }
 
-async function togglePk(id) {
-  var p = pedidos.find(function(x) { return x.id === id; });
-  if (!p) return;
-  p.packed = !p.packed;
-  await save('pedidos', p);
-  var el = document.getElementById('pi-' + id);
-  var pk = p.packed;
-  el.querySelector('.ccol').classList.toggle('pk', pk);
-  el.querySelector('.circ').classList.toggle('pk', pk);
-  el.querySelector('.circ').innerHTML = pk ? '&#10003;' : '';
-  el.querySelector('.pflor').classList.toggle('pk', pk);
-  el.querySelector('.pdet').classList.toggle('pk', pk);
-  el.querySelector('.ptot').classList.toggle('pk', pk);
+function updateFlorRow(fid) {
+  var f = flores.find(function(x) { return x.id === fid; });
+  if (!f) return;
+  var d = draftPedidos[f.nombre];
+  var cant = d ? d.cant : 0;
+  var precio = d ? d.precio : f.precio;
+  var active = cant > 0;
+  var pk = d && d.packed;
+  var row = document.getElementById('fi-' + fid);
+  if (!row) return;
+  row.className = 'fi' + (active ? ' fi-on' : ' fi-off');
+  document.getElementById('fiq-' + fid).textContent = cant || '';
+  document.getElementById('fit-' + fid).textContent = active ? $M(cant * precio) : '';
+  var pkEl = document.getElementById('fipk-' + fid);
+  if (pkEl) {
+    pkEl.style.visibility = active ? 'visible' : 'hidden';
+    pkEl.querySelector('.circ').className = 'circ' + (pk ? ' pk' : '');
+    pkEl.querySelector('.circ').innerHTML = pk ? '&#10003;' : '';
+  }
+}
+
+async function incrFlor(fid) {
+  var f = flores.find(function(x) { return x.id === fid; });
+  if (!f) return;
+  var d = draftPedidos[f.nombre];
+  var precio = d ? d.precio : (f.precio || 0);
+  var cant = (d ? d.cant : 0) + 1;
+  var obj = { fecha: activeDate, cliente: activeClient, flor: f.nombre, cantidad: cant, precio: precio, total: cant * precio, packed: d ? (d.packed || false) : false };
+  if (d && d.pedidoId) obj.id = d.pedidoId;
+  var savedId = await save('pedidos', obj);
+  draftPedidos[f.nombre] = { cant: cant, precio: precio, pedidoId: obj.id || savedId, packed: obj.packed };
+  pedidos = await getAll('pedidos');
+  updateFlorRow(fid);
+  updateDetHeader();
+  renderDia();
+}
+
+async function decrFlor(fid) {
+  var f = flores.find(function(x) { return x.id === fid; });
+  if (!f) return;
+  var d = draftPedidos[f.nombre];
+  if (!d || d.cant <= 0) return;
+  var cant = d.cant - 1;
+  if (cant === 0) {
+    if (d.pedidoId) await del('pedidos', d.pedidoId);
+    delete draftPedidos[f.nombre];
+  } else {
+    var obj = { id: d.pedidoId, fecha: activeDate, cliente: activeClient, flor: f.nombre, cantidad: cant, precio: d.precio, total: cant * d.precio, packed: d.packed || false };
+    await save('pedidos', obj);
+    draftPedidos[f.nombre] = { cant: cant, precio: d.precio, pedidoId: d.pedidoId, packed: d.packed || false };
+  }
+  pedidos = await getAll('pedidos');
+  updateFlorRow(fid);
+  updateDetHeader();
+  renderDia();
+}
+
+async function tglPkFlor(fid) {
+  var f = flores.find(function(x) { return x.id === fid; });
+  if (!f) return;
+  var d = draftPedidos[f.nombre];
+  if (!d || !d.pedidoId) return;
+  var newPk = !d.packed;
+  var obj = { id: d.pedidoId, fecha: activeDate, cliente: activeClient, flor: f.nombre, cantidad: d.cant, precio: d.precio, total: d.cant * d.precio, packed: newPk };
+  await save('pedidos', obj);
+  draftPedidos[f.nombre].packed = newPk;
+  pedidos = await getAll('pedidos');
+  updateFlorRow(fid);
+  renderDia();
+}
+
+function editPrecioFlor(fid) {
+  var f = flores.find(function(x) { return x.id === fid; });
+  if (!f) return;
+  var d = draftPedidos[f.nombre];
+  if (!d) return;
+  editingFlorId = fid;
+  document.getElementById('mp-flornom').textContent = f.nombre;
+  document.getElementById('mp-prec').value = d.precio;
+  openModal('m-precio');
+}
+
+async function savePrecioFlor() {
+  var f = flores.find(function(x) { return x.id === editingFlorId; });
+  if (!f) return;
+  var d = draftPedidos[f.nombre];
+  if (!d) return;
+  var precio = parseFloat(document.getElementById('mp-prec').value) || 0;
+  if (!precio) { toast('Ingresá un precio'); return; }
+  var obj = { id: d.pedidoId, fecha: activeDate, cliente: activeClient, flor: f.nombre, cantidad: d.cant, precio: precio, total: d.cant * precio, packed: d.packed || false };
+  await save('pedidos', obj);
+  draftPedidos[f.nombre].precio = precio;
+  draftPedidos[f.nombre].cant = d.cant; // por si acaso
+  pedidos = await getAll('pedidos');
+  updateFlorRow(editingFlorId);
+  updateDetHeader();
+  renderDia();
+  closeModal('m-precio'); toast('Precio actualizado');
 }
 
 // ═══════════════════════════ MODAL NUEVO CLIENTE ═══════════════════════════
@@ -586,59 +696,10 @@ async function crearClienteDia() {
   closeModal('m-nc');
   activeClient = nombre;
   showScreen('detalle');
-  setTimeout(function() { prepPedModal(null); openModal('m-ped'); }, 300);
 }
 
-// ═══════════════════════════ PEDIDOS CRUD ═══════════════════════════
-function prepPedModal(data) {
-  var sel = document.getElementById('ped-flor');
-  sel.innerHTML = '<option value="">Seleccioná</option>' +
-    flores.slice().sort(function(a,b) { return a.nombre.localeCompare(b.nombre); })
-      .map(function(f) { return '<option value="' + f.id + '" data-p="' + f.precio + '">' + f.nombre + '</option>'; }).join('');
-  if (data) {
-    document.getElementById('ped-title').textContent = 'Editar flor';
-    document.getElementById('ped-id').value    = data.id;
-    document.getElementById('ped-cant').value  = data.cantidad;
-    document.getElementById('ped-prec').value  = data.precio;
-    var opt = Array.from(sel.options).find(function(o) { return o.text === data.flor; });
-    if (opt) sel.value = opt.value;
-  } else {
-    document.getElementById('ped-title').textContent = 'Nueva flor';
-    document.getElementById('ped-id').value = '';
-    ['ped-flor','ped-cant','ped-prec'].forEach(function(id) { document.getElementById(id).value = ''; });
-  }
-  calcPrev();
-}
-function onFlorCh() {
-  var sel = document.getElementById('ped-flor');
-  var opt = sel.options[sel.selectedIndex];
-  if (opt && opt.dataset.p) document.getElementById('ped-prec').value = opt.dataset.p;
-  calcPrev();
-}
-function calcPrev() {
-  var c = parseFloat(document.getElementById('ped-cant').value) || 0;
-  var p = parseFloat(document.getElementById('ped-prec').value) || 0;
-  document.getElementById('ped-prev').textContent = $M(c * p);
-}
-async function savePedido() {
-  var sel  = document.getElementById('ped-flor');
-  var flor = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
-  if (!flor || flor === 'Seleccioná') { toast('Seleccioná una flor'); return; }
-  var cantidad = parseFloat(document.getElementById('ped-cant').value);
-  var precio   = parseFloat(document.getElementById('ped-prec').value);
-  if (!cantidad || !precio) { toast('Completá cantidad y precio'); return; }
-  var eid = document.getElementById('ped-id').value;
-  var obj = { fecha: activeDate, cliente: activeClient, flor: flor, cantidad: cantidad, precio: precio, total: cantidad * precio, packed: false };
-  if (eid) { obj.id = parseInt(eid); obj.packed = (pedidos.find(function(p) { return p.id === obj.id; }) || {}).packed || false; }
-  await save('pedidos', obj);
-  await loadAll(); renderDet(); renderDia();
-  closeModal('m-ped'); toast(eid ? 'Actualizado' : 'Flor agregada');
-}
-function editPed(id) { var p = pedidos.find(function(x) { return x.id === id; }); if (p) { prepPedModal(p); openModal('m-ped'); } }
-async function delPed(id) {
-  if (!confirm('Eliminar?')) return;
-  await del('pedidos', id); await loadAll(); renderDet(); renderDia(); toast('Eliminado');
-}
+// ═══════════════════════════ PEDIDOS CRUD (deprecado - mantenido para compat.) ═══════════════════════════
+// Las funciones prepPedModal/savePedido/editPed/delPed ya no se usan en la vista detalle
 
 // ═══════════════════════════ PAGOS ═══════════════════════════
 function openPagos() {
@@ -879,7 +940,7 @@ async function init() {
   var existF = new Set(flores.map(function(f) { return f.nombre; }));
   var added = false;
   for (var i = 0; i < FLORES_SEED.length; i++) {
-    if (!existF.has(FLORES_SEED[i])) { await save('flores', { nombre: FLORES_SEED[i], precio: 0 }); added = true; }
+    if (!existF.has(FLORES_SEED[i])) { await save('flores', { nombre: FLORES_SEED[i], precio: 1 }); added = true; }
   }
   if (added) flores = await getAll('flores');
   // Seed colores
