@@ -931,6 +931,7 @@
         </div>
       </div>
       <div class="tright">
+        <button class="tbtn" id="btn-install" style="display:none" onclick="installApp()">&#11015;&#65039; Instalar</button>
         <button class="tbtn" onclick="showScreen('config')">&#9881;&#65039;</button>
       </div>
     </div>
@@ -1930,6 +1931,28 @@
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(function () { });
+    }
+
+    var deferredInstallPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      document.getElementById('btn-install').style.display = 'inline-flex';
+    });
+
+    window.addEventListener('appinstalled', function () {
+      deferredInstallPrompt = null;
+      document.getElementById('btn-install').style.display = 'none';
+    });
+
+    function installApp() {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.then(function () {
+        deferredInstallPrompt = null;
+        document.getElementById('btn-install').style.display = 'none';
+      });
     }
 
     init();
