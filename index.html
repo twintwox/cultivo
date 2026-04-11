@@ -1004,7 +1004,7 @@
       <div class="card">
         <div style="padding:14px;display:flex;flex-direction:column;gap:12px">
           <div><label class="fl">Nombre del negocio</label><input class="fc" id="cfg-nom"
-              placeholder="Flores Directo de Cultivos"></div>
+              placeholder="Flores de Cultivos"></div>
           <div><label class="fl">Teléfono</label><input class="fc" id="cfg-tel" type="tel" placeholder="221 555-1234">
           </div>
           <div><label class="fl">Dirección</label><input class="fc" id="cfg-dir" placeholder="Calle 123, Ciudad"></div>
@@ -1462,7 +1462,7 @@
         '<div class="circ' + (pk ? ' pk' : '') + '">' + (pk ? '&#10003;' : '') + '</div></div>' +
         '<div class="fi-name">' + f.nombre + '</div>' +
         '<div class="fi-mid">' +
-        '<span class="fi-prc" id="fip-' + f.id + '">' + $M(precio) + '/paq</span>' +
+        '<span class="fi-prc" id="fip-' + f.id + '">' + $M(precio) + ' / unidad</span>' +
         '<button class="fi-edit" id="fie-' + f.id + '" onclick="editPrecioFlor(' + f.id + ')">&#9999;&#65039;</button>' +
         '</div>' +
         '<div class="fi-ctl">' +
@@ -1502,7 +1502,7 @@
       row.className = 'fi' + (active ? ' fi-on' : ' fi-off');
       document.getElementById('fiq-' + fid).textContent = cant || '';
       var prcEl = document.getElementById('fip-' + fid);
-      if (prcEl) prcEl.textContent = $M(precio) + '/paq';
+      if (prcEl) prcEl.textContent = $M(precio) + ' / unidad';
       var pkEl = document.getElementById('fipk-' + fid);
       if (pkEl) {
         pkEl.style.visibility = active ? 'visible' : 'hidden';
@@ -1811,7 +1811,7 @@
       var vis = flores.filter(function (x) { return x.nombre.toLowerCase().includes(filter.toLowerCase()); })
         .sort(function (a, b) { return a.nombre.localeCompare(b.nombre); });
       el.innerHTML = vis.length ? vis.map(function (f) {
-        return '<div class="li"><div><div class="lin">' + f.nombre + '</div><div class="lis">' + $M(f.precio) + '/paq</div></div>' +
+        return '<div class="li"><div><div class="lin">' + f.nombre + '</div><div class="lis">' + $M(f.precio) + ' / unidad</div></div>' +
           '<div style="display:flex;gap:8px">' +
           '<button class="bic" onclick="openEditFlor(' + f.id + ')">&#9999;&#65039;</button>' +
           '<button class="bic red" onclick="delFlor(' + f.id + ')">&#128465;&#65039;</button>' +
@@ -1879,7 +1879,6 @@
       'Rosa importada x 50cm', 'Rosa importada x 60cm',
       'Statice', 'Solidago', 'Strelitzis', 'Zinnia'
     ];
-    var COLORES_SEED = ['Amarillo', 'Blanco', 'Bordó', 'Fucsia', 'Lila', 'Naranja', 'Rosa', 'Rojo', 'Salmón', 'Verde', 'Violeta', 'Bicolor', 'Mixto'];
 
     async function init() {
       await openDB();
@@ -1891,11 +1890,6 @@
         if (!existF.has(FLORES_SEED[i])) { await save('flores', { nombre: FLORES_SEED[i], precio: 1 }); added = true; }
       }
       if (added) flores = await getAll('flores');
-      // Seed colores
-      if (!colores.length) {
-        for (var i = 0; i < COLORES_SEED.length; i++) await save('colores', { nombre: COLORES_SEED[i] });
-        colores = await getAll('colores');
-      }
       document.getElementById('dpick').value = activeDate;
       document.getElementById('dlbl').textContent = fmtD(activeDate);
       document.getElementById('tsub').textContent = fmtD(activeDate);
