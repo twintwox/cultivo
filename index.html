@@ -1039,10 +1039,12 @@
       <div class="card">
         <div style="padding:14px;display:flex;flex-direction:column;gap:12px">
           <div><label class="fl">Nombre del negocio</label><input class="fc" id="cfg-nom"
-              placeholder="Flores de Cultivos"></div>
-          <div><label class="fl">Teléfono</label><input class="fc" id="cfg-tel" type="tel" placeholder="221 555-1234">
+              placeholder="ej. Flores de Cultivos"></div>
+          <div><label class="fl">Teléfono</label><input class="fc" id="cfg-tel" type="tel"
+              placeholder="ej. 221 555-1234">
           </div>
-          <div><label class="fl">Dirección</label><input class="fc" id="cfg-dir" placeholder="Calle 123, Ciudad"></div>
+          <div><label class="fl">Dirección</label><input class="fc" id="cfg-dir" placeholder="ej. Calle 123, Ciudad">
+          </div>
           <div><label class="fl">Próximo N° de presupuesto</label><input class="fc" id="cfg-num" type="number" min="1"
               placeholder="1"></div>
           <div>
@@ -1893,7 +1895,7 @@
 
     // ═══════════════════════════ CONFIG ═══════════════════════════
     async function loadCfg() {
-      document.getElementById('cfg-nom').value = await cfgGet('nom') || '';
+      document.getElementById('cfg-nom').value = await cfgGet('nom') || 'Flores de cultivo';
       document.getElementById('cfg-tel').value = await cfgGet('tel') || '';
       document.getElementById('cfg-dir').value = await cfgGet('dir') || '';
       document.getElementById('cfg-num').value = await cfgGet('num') || 1;
