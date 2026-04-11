@@ -1,4 +1,4 @@
-const CACHE = 'cultivo-v2';
+const CACHE = 'cultivo-v3';
 
 const PRECACHE = [
   '/',
@@ -12,7 +12,6 @@ const PRECACHE = [
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(c =>
-      // Core app shell must succeed; external resources are best-effort
       c.addAll(['/', '/index.html', '/icons/icon-192.png', '/icons/icon-512.png'])
         .then(() => Promise.allSettled(PRECACHE.slice(4).map(url => c.add(url))))
     )
@@ -29,19 +28,17 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
+// Network-first for everything: always try to fetch fresh content,
+// update the cache on success, fall back to cache when offline.
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(res => {
+    fetch(e.request)
+      .then(res => {
         if (res.ok && (res.type === 'basic' || res.type === 'cors')) {
           caches.open(CACHE).then(c => c.put(e.request, res.clone()));
         }
         return res;
-      }).catch(() => {
-        // For navigation requests fallback to the cached app shell
-        if (e.request.mode === 'navigate') return caches.match('/');
-      });
-    })
+      })
+      .catch(() => caches.match(e.request).then(cached => cached || caches.match('/')))
   );
 });
