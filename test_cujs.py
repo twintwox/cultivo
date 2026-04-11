@@ -177,7 +177,7 @@ def test_cuj7_catalogo_crud(page: Page):
     page.locator("input[placeholder='Buscar flor...']").fill("Orquídea Test")
     flor_item = page.locator("#flist .li").first
     expect(flor_item).to_contain_text("Orquídea Test")
-    expect(flor_item).to_contain_text("$ 5.000/paq")
+    expect(flor_item).to_contain_text("$ 5.000 / unidad")
 
 
 # ─── CUJ 8: Configuración del Comercio ───────────────────────────────────────

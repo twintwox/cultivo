@@ -823,9 +823,10 @@
       font-weight: 600;
       font-size: 14px;
       min-width: 0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.25;
+      padding: 4px 0;
     }
 
     .fi-mid {
@@ -901,7 +902,7 @@
       </div>
     </div>
     <div class="tright">
-      <button class="tbtn" id="btn-desc" style="display:none" onclick="openDescModal()">&#128201; Desc</button>
+      <button class="tbtn" id="btn-desc" style="display:none" onclick="openDescModal()">&#128201; Descuento</button>
       <button class="tbtn" id="btn-recibo" style="display:none" onclick="showReciboModal()">&#129534; Recibo</button>
       <button class="tbtn" id="btn-pagos" style="display:none" onclick="openPagos()">&#128176; Pagos</button>
       <button class="tbtn" onclick="showScreen('config')">&#9881;&#65039;</button>
@@ -1067,7 +1068,7 @@
       <div class="mh"></div>
       <div class="mt2">Editar precio</div>
       <div id="mp-flornom" style="color:var(--mu);font-size:14px;margin-bottom:14px"></div>
-      <div class="fg"><label class="fl">Precio / paq</label><input type="number" class="fc" id="mp-prec" min="0"
+      <div class="fg"><label class="fl">Precio x unidad</label><input type="number" class="fc" id="mp-prec" min="0"
           placeholder="0"></div>
       <div style="display:flex;gap:10px">
         <button class="btn bs" style="flex:1" onclick="closeModal('m-precio')">Cancelar</button>
@@ -1168,8 +1169,8 @@
       <div class="mh"></div>
       <div class="mt2" id="mf-ttl">Nueva flor</div><input type="hidden" id="mf-id">
       <div class="fg"><label class="fl">Nombre</label><input class="fc" id="mf-nom" placeholder="Ej: Lilium"></div>
-      <div class="fg"><label class="fl">Precio por paquete ($)</label><input type="number" class="fc" id="mf-prec"
-          min="0" placeholder="0"></div>
+      <div class="fg"><label class="fl">Precio x unidad ($)</label><input type="number" class="fc" id="mf-prec" min="0"
+          placeholder="0"></div>
       <div style="display:flex;gap:10px">
         <button class="btn bs" style="flex:1" onclick="closeModal('m-flor')">Cancelar</button>
         <button class="btn bp" style="flex:2" onclick="saveFlor()">Guardar</button>
@@ -1462,7 +1463,7 @@
         '<div class="circ' + (pk ? ' pk' : '') + '">' + (pk ? '&#10003;' : '') + '</div></div>' +
         '<div class="fi-name">' + f.nombre + '</div>' +
         '<div class="fi-mid">' +
-        '<span class="fi-prc" id="fip-' + f.id + '">' + $M(precio) + ' / unidad</span>' +
+        '<span class="fi-prc" id="fip-' + f.id + '">' + $M(precio) + ' x unidad</span>' +
         '<button class="fi-edit" id="fie-' + f.id + '" onclick="editPrecioFlor(' + f.id + ')">&#9999;&#65039;</button>' +
         '</div>' +
         '<div class="fi-ctl">' +
@@ -1502,7 +1503,7 @@
       row.className = 'fi' + (active ? ' fi-on' : ' fi-off');
       document.getElementById('fiq-' + fid).textContent = cant || '';
       var prcEl = document.getElementById('fip-' + fid);
-      if (prcEl) prcEl.textContent = $M(precio) + ' / unidad';
+      if (prcEl) prcEl.textContent = $M(precio) + ' x unidad';
       var pkEl = document.getElementById('fipk-' + fid);
       if (pkEl) {
         pkEl.style.visibility = active ? 'visible' : 'hidden';
@@ -1746,7 +1747,7 @@
       doc.text('CLIENTE:   ' + cli.toUpperCase(), ML, y); y += 10;
       doc.setFillColor(61, 61, 61); doc.rect(ML, y, CW, 9, 'F');
       doc.setFontSize(10); doc.setTextColor(255, 255, 255);
-      doc.text('CANTIDAD', ML + 2, y + 6); doc.text('ART\u00cdCULO', ML + 22, y + 6); doc.text('PRECIO', ML + 130, y + 6); doc.text('IMPORTE', PW - MR, y + 6, { align: 'right' }); y += 9;
+      doc.text('CANTIDAD', ML + 2, y + 6); doc.text('ART\u00cdCULO', ML + 22, y + 6); doc.text('PRECIO UNIDAD', ML + 130, y + 6); doc.text('IMPORTE', PW - MR, y + 6, { align: 'right' }); y += 9;
       doc.setFont('helvetica', 'normal'); doc.setTextColor(30, 30, 30);
       ps.forEach(function (p, i) {
         if (i % 2 === 1) { doc.setFillColor(242, 242, 242); doc.rect(ML, y, CW, 8, 'F'); }
@@ -1811,7 +1812,7 @@
       var vis = flores.filter(function (x) { return x.nombre.toLowerCase().includes(filter.toLowerCase()); })
         .sort(function (a, b) { return a.nombre.localeCompare(b.nombre); });
       el.innerHTML = vis.length ? vis.map(function (f) {
-        return '<div class="li"><div><div class="lin">' + f.nombre + '</div><div class="lis">' + $M(f.precio) + ' / unidad</div></div>' +
+        return '<div class="li"><div><div class="lin">' + f.nombre + '</div><div class="lis">' + $M(f.precio) + ' x unidad</div></div>' +
           '<div style="display:flex;gap:8px">' +
           '<button class="bic" onclick="openEditFlor(' + f.id + ')">&#9999;&#65039;</button>' +
           '<button class="bic red" onclick="delFlor(' + f.id + ')">&#128465;&#65039;</button>' +
