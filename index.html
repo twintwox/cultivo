@@ -1758,7 +1758,7 @@
       if (!cli) { toast('Seleccioná un cliente'); return; }
       var ps = pedsDia().filter(function (p) { return p.cliente.toLowerCase() === cli.toLowerCase(); });
       if (!ps.length) { toast('Sin pedidos para ese cliente'); return; }
-      var nom = await cfgGet('nom') || 'Flores de cultivo';
+      var nom = await cfgGet('nom') || '';
       var tel = await cfgGet('tel') || '';
       var dir = await cfgGet('dir') || '';
       var logo = await cfgGet('logo') || '';
@@ -1895,7 +1895,7 @@
 
     // ═══════════════════════════ CONFIG ═══════════════════════════
     async function loadCfg() {
-      document.getElementById('cfg-nom').value = await cfgGet('nom') || 'Flores de cultivo';
+      document.getElementById('cfg-nom').value = await cfgGet('nom') || '';
       document.getElementById('cfg-tel').value = await cfgGet('tel') || '';
       document.getElementById('cfg-dir').value = await cfgGet('dir') || '';
       document.getElementById('cfg-num').value = await cfgGet('num') || 1;
